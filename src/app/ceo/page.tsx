@@ -77,11 +77,7 @@ export default function CeoDashboardPage() {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-slate-500">MTD GMV</span>
-                        <span className="font-medium">{fmtCurrency(pod.totalMtdGmv)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Target</span>
-                        <span>{fmtCurrency(pod.totalMtdTarget)}</span>
+                        <span className="font-medium">{fmtCurrency(pod.totalMtdGmv)} / {fmtCurrency(pod.totalMtdTarget)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-500">Pacing</span>
@@ -95,6 +91,14 @@ export default function CeoDashboardPage() {
                       <div className="flex justify-between">
                         <span className="text-slate-500">Videos Posted</span>
                         <span>{pod.totalVideosPosted.toLocaleString('en-US')} / {pod.totalVideoTarget.toLocaleString('en-US')}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Samples Approved</span>
+                        <span>{pod.totalSamplesApproved.toLocaleString('en-US')} / {pod.totalSamplesTarget.toLocaleString('en-US')}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Ad Spend</span>
+                        <span>{fmtCurrency(pod.totalAdSpend)} / {fmtCurrency(pod.totalSpendTarget)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-500">Avg ROI</span>

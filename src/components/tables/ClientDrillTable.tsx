@@ -56,18 +56,22 @@ export default function ClientDrillTable({ clients }: ClientDrillTableProps) {
             <th className="text-right py-3 px-2 font-semibold text-slate-600 cursor-pointer" onClick={() => handleSort('cumulativeMtdGmv')}>
               MTD GMV{sortIcon('cumulativeMtdGmv')}
             </th>
+            <th className="text-right py-3 px-2 font-semibold text-slate-500">GMV Target</th>
             <th className="text-center py-3 px-2 font-semibold text-slate-600 cursor-pointer" onClick={() => handleSort('gmvPacing')}>
               Pacing{sortIcon('gmvPacing')}
             </th>
             <th className="text-right py-3 px-2 font-semibold text-slate-600 cursor-pointer" onClick={() => handleSort('videosPosted')}>
               Videos{sortIcon('videosPosted')}
             </th>
+            <th className="text-right py-3 px-2 font-semibold text-slate-500">Vid Target</th>
             <th className="text-right py-3 px-2 font-semibold text-slate-600 cursor-pointer" onClick={() => handleSort('totalSamplesApproved')}>
               Samples{sortIcon('totalSamplesApproved')}
             </th>
+            <th className="text-right py-3 px-2 font-semibold text-slate-500">Samp Target</th>
             <th className="text-right py-3 px-2 font-semibold text-slate-600 cursor-pointer" onClick={() => handleSort('adSpend')}>
               Spend{sortIcon('adSpend')}
             </th>
+            <th className="text-right py-3 px-2 font-semibold text-slate-500">Spend Target</th>
             <th className="text-right py-3 px-2 font-semibold text-slate-600 cursor-pointer" onClick={() => handleSort('roi')}>
               ROI{sortIcon('roi')}
             </th>
@@ -78,14 +82,18 @@ export default function ClientDrillTable({ clients }: ClientDrillTableProps) {
             <tr key={c.clientSlug} className="border-b border-slate-100 hover:bg-slate-50">
               <td className="py-3 px-2 font-medium">{c.clientName}</td>
               <td className="py-3 px-2 text-right">{fmtCurrency(c.cumulativeMtdGmv)}</td>
+              <td className="py-3 px-2 text-right text-slate-500">{fmtCurrency(c.gmvTargetMonth)}</td>
               <td className="py-3 px-2 text-center">
                 <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${getStatusBadge(c.gmvStatus)}`}>
                   {(c.gmvPacing * 100).toFixed(0)}%
                 </span>
               </td>
               <td className="py-3 px-2 text-right">{c.videosPosted.toLocaleString('en-US')}</td>
+              <td className="py-3 px-2 text-right text-slate-500">{c.monthlyVideoTarget.toLocaleString('en-US')}</td>
               <td className="py-3 px-2 text-right">{c.totalSamplesApproved.toLocaleString('en-US')}</td>
+              <td className="py-3 px-2 text-right text-slate-500">{c.targetSamplesGoals.toLocaleString('en-US')}</td>
               <td className="py-3 px-2 text-right">{fmtCurrency(c.adSpend)}</td>
+              <td className="py-3 px-2 text-right text-slate-500">{fmtCurrency(c.spendTarget)}</td>
               <td className="py-3 px-2 text-right">{c.roi.toFixed(2)}</td>
             </tr>
           ))}

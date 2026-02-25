@@ -6,7 +6,7 @@ interface DailyHeatmapProps {
   clients: ClientMtdSummary[];
 }
 
-/** Heatmap uses stricter pacing thresholds: green >= 100%, yellow 85-99%, red < 85% */
+/** Heatmap pacing colors: green >= 100%, yellow 85-99%, red < 85% */
 function getHeatColor(pacing: number): string {
   if (pacing >= 1.0) return 'bg-emerald-100 text-emerald-800';
   if (pacing >= 0.85) return 'bg-amber-100 text-amber-800';
@@ -18,16 +18,32 @@ function fmtCurrency(val: number): string {
   return `$${val.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 }
 
-/** Get today's and yesterday's GMV from client dailyData */
-function getRecentDayGmv(client: ClientMtdSummary): { todayGmv: number; yesterdayGmv: number } {
+/** Get yesterday's daily data from client dailyData. Returns null if no data found. */
+function getYesterdayData(client: ClientMtdSummary): {
+  gmv: number;
+  videos: number;
+  samples: number;
+  adSpend: number;
+  hasData: boolean;
+} {
   const daily = client.dailyData || [];
-  // Filter to only rows with actual activity, then take the last two
+  // Filter to only rows with actual activity, take the last entry as "yesterday"
   const activeDays = daily.filter(
-    (d) => d.dailyGmv > 0 || d.videosPosted > 0 || d.totalSamplesApproved > 0
+    (d) => d.dailyGmv > 0 || d.videosPosted > 0 || d.totalSamplesApproved > 0 || d.adSpend > 0
   );
-  const todayGmv = activeDays.length > 0 ? activeDays[activeDays.length - 1].dailyGmv : 0;
-  const yesterdayGmv = activeDays.length > 1 ? activeDays[activeDays.length - 2].dailyGmv : 0;
-  return { todayGmv, yesterdayGmv };
+
+  if (activeDays.length === 0) {
+    return { gmv: 0, videos: 0, samples: 0, adSpend: 0, hasData: false };
+  }
+
+  const latest = activeDays[activeDays.length - 1];
+  return {
+    gmv: latest.dailyGmv,
+    videos: latest.videosPosted,
+    samples: latest.totalSamplesApproved,
+    adSpend: latest.adSpend,
+    hasData: true,
+  };
 }
 
 export default function DailyHeatmap({ clients }: DailyHeatmapProps) {
@@ -41,7 +57,9 @@ export default function DailyHeatmap({ clients }: DailyHeatmapProps) {
             <th className="text-right py-3 px-2 font-semibold text-slate-600">MTD GMV</th>
             <th className="text-right py-3 px-2 font-semibold text-slate-600">Target</th>
             <th className="text-center py-3 px-2 font-semibold text-slate-600">GMV Pacing</th>
-            <th className="text-right py-3 px-2 font-semibold text-slate-600">Today</th>
+            <th className="text-center py-3 px-2 font-semibold text-slate-600">Video Pacing</th>
+            <th className="text-center py-3 px-2 font-semibold text-slate-600">Sample Pacing</th>
+            <th className="text-center py-3 px-2 font-semibold text-slate-600">Spend Pacing</th>
             <th className="text-right py-3 px-2 font-semibold text-slate-600">Yesterday</th>
             <th className="text-right py-3 px-2 font-semibold text-slate-600">Videos</th>
             <th className="text-right py-3 px-2 font-semibold text-slate-600">Samples</th>
@@ -51,7 +69,17 @@ export default function DailyHeatmap({ clients }: DailyHeatmapProps) {
         </thead>
         <tbody>
           {clients.map((client) => {
-            const { todayGmv, yesterdayGmv } = getRecentDayGmv(client);
+            const yesterday = getYesterdayData(client);
+            const videoPacing = client.monthlyVideoTarget > 0
+              ? client.videosPosted / client.monthlyVideoTarget
+              : 0;
+            const samplePacing = client.targetSamplesGoals > 0
+              ? client.totalSamplesApproved / client.targetSamplesGoals
+              : 0;
+            const spendPacing = client.spendTarget > 0
+              ? client.adSpend / client.spendTarget
+              : 0;
+
             return (
               <tr key={client.clientSlug} className="border-b border-slate-100 hover:bg-slate-50">
                 <td className="py-3 px-2 font-medium">{client.clientName}</td>
@@ -62,11 +90,27 @@ export default function DailyHeatmap({ clients }: DailyHeatmapProps) {
                     {(client.gmvPacing * 100).toFixed(0)}%
                   </span>
                 </td>
-                <td className="py-3 px-2 text-right font-medium text-emerald-700">
-                  {fmtCurrency(todayGmv)}
+                <td className="py-3 px-2 text-center">
+                  <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${getHeatColor(videoPacing)}`}>
+                    {(videoPacing * 100).toFixed(0)}%
+                  </span>
                 </td>
-                <td className="py-3 px-2 text-right text-slate-600">
-                  {fmtCurrency(yesterdayGmv)}
+                <td className="py-3 px-2 text-center">
+                  <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${getHeatColor(samplePacing)}`}>
+                    {(samplePacing * 100).toFixed(0)}%
+                  </span>
+                </td>
+                <td className="py-3 px-2 text-center">
+                  <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${getHeatColor(spendPacing)}`}>
+                    {(spendPacing * 100).toFixed(0)}%
+                  </span>
+                </td>
+                <td className={`py-3 px-2 text-right ${!yesterday.hasData ? 'bg-amber-50' : ''}`}>
+                  {yesterday.hasData ? (
+                    <span className="font-medium text-slate-700">{fmtCurrency(yesterday.gmv)}</span>
+                  ) : (
+                    <span className="text-amber-600 font-semibold text-xs">No Data</span>
+                  )}
                 </td>
                 <td className="py-3 px-2 text-right">{client.videosPosted.toLocaleString('en-US')}</td>
                 <td className="py-3 px-2 text-right">{client.totalSamplesApproved.toLocaleString('en-US')}</td>

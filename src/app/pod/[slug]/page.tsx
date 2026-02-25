@@ -25,6 +25,12 @@ export default function PodDashboardPage() {
         const totalVideos = data.clients.reduce((s, c) => s + c.videosPosted, 0);
         const totalVideoTarget = data.clients.reduce((s, c) => s + c.monthlyVideoTarget, 0);
         const videoPacing = totalVideoTarget > 0 ? totalVideos / totalVideoTarget : 0;
+        const totalSamples = data.clients.reduce((s, c) => s + c.totalSamplesApproved, 0);
+        const totalSamplesTarget = data.clients.reduce((s, c) => s + c.targetSamplesGoals, 0);
+        const samplesPacing = totalSamplesTarget > 0 ? totalSamples / totalSamplesTarget : 0;
+        const totalSpend = data.clients.reduce((s, c) => s + c.adSpend, 0);
+        const totalSpendTarget = data.clients.reduce((s, c) => s + c.spendTarget, 0);
+        const spendPacing = totalSpendTarget > 0 ? totalSpend / totalSpendTarget : 0;
         const roiClients = data.clients.filter((c) => c.roi > 0);
         const avgRoi = roiClients.length > 0
           ? roiClients.reduce((s, c) => s + c.roi, 0) / roiClients.length
@@ -38,7 +44,7 @@ export default function PodDashboardPage() {
           >
             {/* Pod Summary KPIs */}
             <section className="mb-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <KpiCard
                   label="Pod MTD GMV"
                   value={totalMtdGmv}
@@ -56,16 +62,32 @@ export default function PodDashboardPage() {
                   format="number"
                 />
                 <KpiCard
-                  label="Active Clients"
-                  value={data.clients.length}
-                  status="green"
+                  label="Pod Samples Approved"
+                  value={totalSamples}
+                  target={totalSamplesTarget}
+                  pacing={samplesPacing}
+                  status={getPacingStatus(samplesPacing)}
                   format="number"
+                />
+                <KpiCard
+                  label="Pod Ad Spend"
+                  value={totalSpend}
+                  target={totalSpendTarget}
+                  pacing={spendPacing}
+                  status={getPacingStatus(spendPacing)}
+                  format="currency"
                 />
                 <KpiCard
                   label="Avg ROI"
                   value={avgRoi}
                   status="green"
                   format="roi"
+                />
+                <KpiCard
+                  label="Active Clients"
+                  value={data.clients.length}
+                  status="green"
+                  format="number"
                 />
               </div>
             </section>
@@ -95,7 +117,7 @@ export default function PodDashboardPage() {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-slate-500">MTD GMV</span>
-                        <span className="font-medium">{fmtCurrency(client.cumulativeMtdGmv)}</span>
+                        <span className="font-medium">{fmtCurrency(client.cumulativeMtdGmv)} / {fmtCurrency(client.gmvTargetMonth)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-500">Pacing</span>
@@ -111,8 +133,16 @@ export default function PodDashboardPage() {
                         <span>{client.videosPosted.toLocaleString('en-US')} / {client.monthlyVideoTarget.toLocaleString('en-US')}</span>
                       </div>
                       <div className="flex justify-between">
+                        <span className="text-slate-500">Samples</span>
+                        <span>{client.totalSamplesApproved.toLocaleString('en-US')} / {client.targetSamplesGoals.toLocaleString('en-US')}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Ad Spend</span>
+                        <span>{fmtCurrency(client.adSpend)} / {fmtCurrency(client.spendTarget)}</span>
+                      </div>
+                      <div className="flex justify-between">
                         <span className="text-slate-500">ROI</span>
-                        <span>{client.roi.toFixed(2)}</span>
+                        <span>{client.roi.toFixed(2)}{client.roiTarget > 0 ? ` / ${client.roiTarget.toFixed(2)}` : ''}</span>
                       </div>
                     </div>
                   </div>
