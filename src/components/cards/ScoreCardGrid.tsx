@@ -7,6 +7,12 @@ interface ScoreCardGridProps {
   scorecard: MtdScorecard;
 }
 
+function fmtProjected(val: number): string {
+  if (val >= 1_000_000) return `Projected: $${(val / 1_000_000).toFixed(1)}M`;
+  if (val >= 1_000) return `Projected: $${val.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+  return `Projected: $${val.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+}
+
 export default function ScoreCardGrid({ scorecard }: ScoreCardGridProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
@@ -17,6 +23,7 @@ export default function ScoreCardGrid({ scorecard }: ScoreCardGridProps) {
         pacing={scorecard.gmvPacing}
         status={scorecard.gmvStatus}
         format="currency"
+        subtitle={scorecard.projectedMonthlyGmv > 0 ? fmtProjected(scorecard.projectedMonthlyGmv) : undefined}
       />
       <KpiCard
         label="Videos Posted"

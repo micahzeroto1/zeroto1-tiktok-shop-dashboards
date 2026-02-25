@@ -56,6 +56,13 @@ export interface WeeklyRollup {
   sparkCodesAcquired: number;
   targetInvitesSent: number;
   dailySampleRequests: number;
+  l0Approved: number;
+  l1Approved: number;
+  l2Approved: number;
+  l3Approved: number;
+  l4Approved: number;
+  l5Approved: number;
+  l6Approved: number;
   totalSamplesApproved: number;
   targetSamplesGoals: number;
   samplesDecline: number;
@@ -78,6 +85,7 @@ export interface MtdScorecard {
   monthlyVideoTarget: number;
   videoPacing: number;
   videoStatus: 'green' | 'yellow' | 'red';
+  videosConverted: number;
   totalSamplesApproved: number;
   targetSamplesGoals: number;
   samplesPacing: number;
@@ -89,6 +97,21 @@ export interface MtdScorecard {
   roi: number;
   roiTarget: number;
   roiStatus: 'green' | 'yellow' | 'red';
+  // Pipeline metrics
+  affiliatesAdded: number;
+  contentPending: number;
+  sparkCodesAcquired: number;
+  targetInvitesSent: number;
+  dailySampleRequests: number;
+  samplesDecline: number;
+  samplesRemain: number;
+  l0Approved: number;
+  l1Approved: number;
+  l2Approved: number;
+  l3Approved: number;
+  l4Approved: number;
+  l5Approved: number;
+  l6Approved: number;
 }
 
 export interface SkuData {
@@ -130,12 +153,28 @@ export interface ClientMtdSummary {
   projectedMonthlyGmv: number;
   videosPosted: number;
   monthlyVideoTarget: number;
+  videosConverted: number;
   totalSamplesApproved: number;
   targetSamplesGoals: number;
   adSpend: number;
   spendTarget: number;
   roi: number;
   roiTarget: number;
+  // Pipeline metrics
+  affiliatesAdded: number;
+  contentPending: number;
+  sparkCodesAcquired: number;
+  targetInvitesSent: number;
+  dailySampleRequests: number;
+  samplesDecline: number;
+  samplesRemain: number;
+  l0Approved: number;
+  l1Approved: number;
+  l2Approved: number;
+  l3Approved: number;
+  l4Approved: number;
+  l5Approved: number;
+  l6Approved: number;
   dailyData: DailyMetrics[];
 }
 
@@ -154,6 +193,7 @@ export interface PodSummary {
   totalMtdTarget: number;
   gmvPacing: number;
   gmvStatus: 'green' | 'yellow' | 'red';
+  projectedMonthlyGmv: number;
   totalVideosPosted: number;
   totalVideoTarget: number;
   totalSamplesApproved: number;
@@ -161,6 +201,13 @@ export interface PodSummary {
   totalAdSpend: number;
   totalSpendTarget: number;
   avgRoi: number;
+  // Pipeline totals
+  totalSampleRequests: number;
+  totalSamplesDecline: number;
+  totalAffiliatesAdded: number;
+  totalContentPending: number;
+  totalInvitesSent: number;
+  totalSparkCodes: number;
   clients: ClientMtdSummary[];
 }
 
@@ -169,6 +216,7 @@ export interface CeoApiResponse {
   companyMtdTarget: number;
   companyGmvPacing: number;
   companyGmvStatus: 'green' | 'yellow' | 'red';
+  projectedMonthlyGmv: number;
   annualTarget: number;
   projectedAnnualGmv: number;
   pods: PodSummary[];

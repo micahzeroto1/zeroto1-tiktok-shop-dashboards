@@ -9,7 +9,14 @@ import { getPacingStatus } from '@/config/constants';
 import type { CeoApiResponse } from '@/types/dashboard';
 
 function fmtCurrency(val: number): string {
+  if (val >= 1_000_000) return `$${(val / 1_000_000).toFixed(1)}M`;
   return `$${val.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+}
+
+function fmtProjected(val: number): string {
+  if (val >= 1_000_000) return `Projected: $${(val / 1_000_000).toFixed(1)}M`;
+  if (val >= 1_000) return `Projected: $${val.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+  return `Projected: $${val.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 }
 
 export default function CeoDashboardPage() {
@@ -44,6 +51,7 @@ export default function CeoDashboardPage() {
                   pacing={data.companyGmvPacing}
                   status={data.companyGmvStatus}
                   format="currency"
+                  subtitle={data.projectedMonthlyGmv > 0 ? fmtProjected(data.projectedMonthlyGmv) : undefined}
                   warning={companyWarning(gmvReporting)}
                 />
                 <KpiCard
@@ -144,6 +152,33 @@ export default function CeoDashboardPage() {
                         <div className="flex justify-between">
                           <span className="text-slate-500">Avg ROI</span>
                           <span>{pod.avgRoi.toFixed(2)}</span>
+                        </div>
+                        {/* Pipeline metrics */}
+                        <div className="border-t border-slate-100 pt-2 mt-2">
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">Sample Requests</span>
+                            <span>{pod.totalSampleRequests.toLocaleString('en-US')}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">Samples Declined</span>
+                            <span>{pod.totalSamplesDecline.toLocaleString('en-US')}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">Affiliates Added</span>
+                            <span>{pod.totalAffiliatesAdded.toLocaleString('en-US')}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">Content Pending</span>
+                            <span>{pod.totalContentPending.toLocaleString('en-US')}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">Invites Sent</span>
+                            <span>{pod.totalInvitesSent.toLocaleString('en-US')}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">Spark Codes</span>
+                            <span>{pod.totalSparkCodes.toLocaleString('en-US')}</span>
+                          </div>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-slate-500">Clients</span>

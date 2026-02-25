@@ -30,6 +30,7 @@ export default function WeeklyTable({ weeklyData }: WeeklyTableProps) {
             <th className="text-right py-3 px-2 font-semibold text-slate-600">GMV</th>
             <th className="text-right py-3 px-2 font-semibold text-slate-600">Target</th>
             <th className="text-right py-3 px-2 font-semibold text-slate-600">Videos</th>
+            <th className="text-right py-3 px-2 font-semibold text-slate-600">Converted</th>
             <th className="text-right py-3 px-2 font-semibold text-slate-600">Samples</th>
             <th className="text-right py-3 px-2 font-semibold text-slate-600">Ad Spend</th>
             <th className="text-right py-3 px-2 font-semibold text-slate-600">ROI</th>
@@ -42,6 +43,7 @@ export default function WeeklyTable({ weeklyData }: WeeklyTableProps) {
               <td className="py-3 px-2 text-right">{fmtCurrency(week.dailyGmv)}</td>
               <td className="py-3 px-2 text-right text-slate-500">{fmtCurrency(week.gmvTarget)}</td>
               <td className="py-3 px-2 text-right">{fmtNumber(week.videosPosted)}</td>
+              <td className="py-3 px-2 text-right text-slate-500">{fmtNumber(week.videosConverted)}</td>
               <td className="py-3 px-2 text-right">{fmtNumber(week.totalSamplesApproved)}</td>
               <td className="py-3 px-2 text-right">{fmtCurrency(week.adSpend)}</td>
               <td className="py-3 px-2 text-right">{week.roi.toFixed(2)}</td>

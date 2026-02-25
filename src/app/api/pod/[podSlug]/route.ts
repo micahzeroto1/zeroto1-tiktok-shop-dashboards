@@ -68,12 +68,27 @@ export async function GET(
         projectedMonthlyGmv: scorecard.projectedMonthlyGmv,
         videosPosted: scorecard.videosPosted,
         monthlyVideoTarget: scorecard.monthlyVideoTarget,
+        videosConverted: scorecard.videosConverted,
         totalSamplesApproved: scorecard.totalSamplesApproved,
         targetSamplesGoals: scorecard.targetSamplesGoals,
         adSpend: scorecard.adSpend,
         spendTarget: scorecard.spendTarget,
         roi: scorecard.roi,
         roiTarget: scorecard.roiTarget,
+        affiliatesAdded: scorecard.affiliatesAdded,
+        contentPending: scorecard.contentPending,
+        sparkCodesAcquired: scorecard.sparkCodesAcquired,
+        targetInvitesSent: scorecard.targetInvitesSent,
+        dailySampleRequests: scorecard.dailySampleRequests,
+        samplesDecline: scorecard.samplesDecline,
+        samplesRemain: scorecard.samplesRemain,
+        l0Approved: scorecard.l0Approved,
+        l1Approved: scorecard.l1Approved,
+        l2Approved: scorecard.l2Approved,
+        l3Approved: scorecard.l3Approved,
+        l4Approved: scorecard.l4Approved,
+        l5Approved: scorecard.l5Approved,
+        l6Approved: scorecard.l6Approved,
         dailyData: daily,
       };
     });
@@ -89,12 +104,26 @@ export async function GET(
           existing.gmvTarget += w.gmvTarget;
           existing.videosPosted += w.videosPosted;
           existing.monthlyVideoTarget += w.monthlyVideoTarget;
+          existing.videosConverted += w.videosConverted;
           existing.totalSamplesApproved += w.totalSamplesApproved;
           existing.targetSamplesGoals += w.targetSamplesGoals;
           existing.adSpend += w.adSpend;
           existing.spendTarget += w.spendTarget;
           existing.cumulativeMtdGmv += w.cumulativeMtdGmv;
           existing.projectedMonthlyGmv += w.projectedMonthlyGmv;
+          existing.affiliatesAdded += w.affiliatesAdded;
+          existing.contentPending += w.contentPending;
+          existing.sparkCodesAcquired += w.sparkCodesAcquired;
+          existing.targetInvitesSent += w.targetInvitesSent;
+          existing.dailySampleRequests += w.dailySampleRequests;
+          existing.samplesDecline += w.samplesDecline;
+          existing.l0Approved += w.l0Approved;
+          existing.l1Approved += w.l1Approved;
+          existing.l2Approved += w.l2Approved;
+          existing.l3Approved += w.l3Approved;
+          existing.l4Approved += w.l4Approved;
+          existing.l5Approved += w.l5Approved;
+          existing.l6Approved += w.l6Approved;
           // ROI: average across clients (weighted later if needed)
           existing.roi = (existing.roi + w.roi) / 2;
         } else {

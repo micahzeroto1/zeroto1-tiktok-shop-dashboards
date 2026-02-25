@@ -49,6 +49,7 @@ export function buildMtdScorecardFromRollup(
     monthlyVideoTarget: src.monthlyVideoTarget,
     videoPacing,
     videoStatus: getPacingStatus(videoPacing),
+    videosConverted: src.videosConverted,
     totalSamplesApproved: src.totalSamplesApproved,
     targetSamplesGoals: src.targetSamplesGoals,
     samplesPacing,
@@ -60,6 +61,21 @@ export function buildMtdScorecardFromRollup(
     roi: src.roi,
     roiTarget: src.roiTarget,
     roiStatus,
+    // Pipeline metrics
+    affiliatesAdded: src.affiliatesAdded,
+    contentPending: src.contentPending,
+    sparkCodesAcquired: src.sparkCodesAcquired,
+    targetInvitesSent: src.targetInvitesSent,
+    dailySampleRequests: src.dailySampleRequests,
+    samplesDecline: src.samplesDecline,
+    samplesRemain: src.samplesRemain,
+    l0Approved: src.l0Approved,
+    l1Approved: src.l1Approved,
+    l2Approved: src.l2Approved,
+    l3Approved: src.l3Approved,
+    l4Approved: src.l4Approved,
+    l5Approved: src.l5Approved,
+    l6Approved: src.l6Approved,
   };
 }
 
@@ -96,6 +112,16 @@ export function buildMtdScorecard(daily: DailyMetrics[]): MtdScorecard {
   const avgRoi = roiDays.length > 0 ? roiDays.reduce((s, d) => s + d.roi, 0) / roiDays.length : 0;
   const roiStatus = latest.roiTarget > 0 ? getPacingStatus(avgRoi / latest.roiTarget) : ('green' as const);
 
+  // Pipeline totals from daily data
+  const mtdVideosConverted = daysWithActivity.reduce((s, d) => s + d.videosConverted, 0);
+  const mtdAffiliatesAdded = daysWithActivity.reduce((s, d) => s + d.affiliatesAdded, 0);
+  const mtdContentPending = latest.contentPending;
+  const mtdSparkCodes = daysWithActivity.reduce((s, d) => s + d.sparkCodesAcquired, 0);
+  const mtdInvitesSent = daysWithActivity.reduce((s, d) => s + d.targetInvitesSent, 0);
+  const mtdSampleRequests = daysWithActivity.reduce((s, d) => s + d.dailySampleRequests, 0);
+  const mtdSamplesDecline = daysWithActivity.reduce((s, d) => s + d.samplesDecline, 0);
+  const mtdSamplesRemain = latest.samplesRemain;
+
   return {
     cumulativeMtdGmv: latest.cumulativeMtdGmv,
     gmvTargetMonth: latest.gmvTargetMonth,
@@ -106,6 +132,7 @@ export function buildMtdScorecard(daily: DailyMetrics[]): MtdScorecard {
     monthlyVideoTarget: latest.monthlyVideoTarget,
     videoPacing,
     videoStatus: getPacingStatus(videoPacing),
+    videosConverted: mtdVideosConverted,
     totalSamplesApproved: mtdSamplesApproved,
     targetSamplesGoals: latest.targetSamplesGoals,
     samplesPacing,
@@ -117,6 +144,20 @@ export function buildMtdScorecard(daily: DailyMetrics[]): MtdScorecard {
     roi: avgRoi,
     roiTarget: latest.roiTarget,
     roiStatus,
+    affiliatesAdded: mtdAffiliatesAdded,
+    contentPending: mtdContentPending,
+    sparkCodesAcquired: mtdSparkCodes,
+    targetInvitesSent: mtdInvitesSent,
+    dailySampleRequests: mtdSampleRequests,
+    samplesDecline: mtdSamplesDecline,
+    samplesRemain: mtdSamplesRemain,
+    l0Approved: daysWithActivity.reduce((s, d) => s + d.l0Approved, 0),
+    l1Approved: daysWithActivity.reduce((s, d) => s + d.l1Approved, 0),
+    l2Approved: daysWithActivity.reduce((s, d) => s + d.l2Approved, 0),
+    l3Approved: daysWithActivity.reduce((s, d) => s + d.l3Approved, 0),
+    l4Approved: daysWithActivity.reduce((s, d) => s + d.l4Approved, 0),
+    l5Approved: daysWithActivity.reduce((s, d) => s + d.l5Approved, 0),
+    l6Approved: daysWithActivity.reduce((s, d) => s + d.l6Approved, 0),
   };
 }
 
@@ -134,9 +175,13 @@ function emptyScorecard(): MtdScorecard {
   return {
     cumulativeMtdGmv: 0, gmvTargetMonth: 0, gmvPacing: 0, gmvStatus: 'red',
     projectedMonthlyGmv: 0, videosPosted: 0, monthlyVideoTarget: 0,
-    videoPacing: 0, videoStatus: 'red', totalSamplesApproved: 0,
-    targetSamplesGoals: 0, samplesPacing: 0, samplesStatus: 'red',
+    videoPacing: 0, videoStatus: 'red', videosConverted: 0,
+    totalSamplesApproved: 0, targetSamplesGoals: 0, samplesPacing: 0, samplesStatus: 'red',
     adSpend: 0, spendTarget: 0, spendPacing: 0, spendStatus: 'red',
     roi: 0, roiTarget: 0, roiStatus: 'red',
+    affiliatesAdded: 0, contentPending: 0, sparkCodesAcquired: 0,
+    targetInvitesSent: 0, dailySampleRequests: 0, samplesDecline: 0, samplesRemain: 0,
+    l0Approved: 0, l1Approved: 0, l2Approved: 0, l3Approved: 0,
+    l4Approved: 0, l5Approved: 0, l6Approved: 0,
   };
 }

@@ -9,6 +9,8 @@ interface KpiCardProps {
   format?: 'currency' | 'percent' | 'number' | 'roi';
   /** Optional warning text shown below pacing (e.g., "2 of 4 clients reporting") */
   warning?: string;
+  /** Optional secondary line shown below the main value (e.g., "Projected: $50,000") */
+  subtitle?: string;
 }
 
 const statusStyles = {
@@ -39,7 +41,7 @@ function formatValue(value: number, format?: 'currency' | 'percent' | 'number' |
   return value.toLocaleString('en-US', { maximumFractionDigits: 0 });
 }
 
-export default function KpiCard({ label, value, target, pacing, status, format, warning }: KpiCardProps) {
+export default function KpiCard({ label, value, target, pacing, status, format, warning, subtitle }: KpiCardProps) {
   const targetIsZero = target !== undefined && target === 0;
 
   return (
@@ -51,6 +53,9 @@ export default function KpiCard({ label, value, target, pacing, status, format, 
       <div className="text-2xl font-bold text-navy-900">
         {formatValue(value, format)}
       </div>
+      {subtitle && (
+        <div className="text-sm text-slate-500 mt-0.5">{subtitle}</div>
+      )}
       {target !== undefined && (
         <div className="text-sm text-slate-500 mt-1">
           {targetIsZero ? (

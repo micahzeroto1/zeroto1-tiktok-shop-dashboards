@@ -11,6 +11,7 @@ import WeeklyMetricsCharts from '@/components/charts/WeeklyMetricsCharts';
 import WeeklyTable from '@/components/tables/WeeklyTable';
 import MonthlyTrendChart from '@/components/charts/MonthlyTrendChart';
 import SkuBreakdownChart from '@/components/charts/SkuBreakdownChart';
+import CreatorPipeline from '@/components/charts/CreatorPipeline';
 import { filterWeeklyByPeriod, type TimePeriod } from '@/lib/week-labels';
 import type { ClientApiResponse } from '@/types/dashboard';
 
@@ -40,6 +41,11 @@ function ClientDashboardContent({ data }: { data: ClientApiResponse }) {
         <WeeklyBarChart weeklyData={filteredWeekly} />
         <WeeklyMetricsCharts weeklyData={filteredWeekly} />
         <WeeklyTable weeklyData={filteredWeekly} />
+      </section>
+
+      {/* Creator Pipeline */}
+      <section className="mb-8">
+        <CreatorPipeline scorecard={data.mtdScorecard} />
       </section>
 
       {/* Monthly Trends */}

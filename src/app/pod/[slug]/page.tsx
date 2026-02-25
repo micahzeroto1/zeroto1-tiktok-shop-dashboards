@@ -11,6 +11,7 @@ import WeeklyMetricsCharts from '@/components/charts/WeeklyMetricsCharts';
 import WeeklyTable from '@/components/tables/WeeklyTable';
 import DailyHeatmap from '@/components/tables/DailyHeatmap';
 import PacingLeaderboard from '@/components/tables/PacingLeaderboard';
+import PipelineHealthChart from '@/components/charts/PipelineHealthChart';
 import { getPacingStatus } from '@/config/constants';
 import { filterWeeklyByPeriod, type TimePeriod } from '@/lib/week-labels';
 import type { PodApiResponse } from '@/types/dashboard';
@@ -137,6 +138,13 @@ function PodDashboardContent({ data }: { data: PodApiResponse }) {
         </section>
       )}
 
+      {/* Pipeline Health */}
+      {data.clients.length > 0 && (
+        <section className="mb-8">
+          <PipelineHealthChart clients={data.clients} />
+        </section>
+      )}
+
       {/* Per-Client Scorecard Grid */}
       <section className="mb-8">
         <h2 className="text-xl font-bold text-navy-900 mb-4">Client Scorecards</h2>
@@ -176,6 +184,20 @@ function PodDashboardContent({ data }: { data: PodApiResponse }) {
                 <div className="flex justify-between">
                   <span className="text-slate-500">ROI</span>
                   <span>{client.roi.toFixed(2)}{client.roiTarget > 0 ? ` / ${client.roiTarget.toFixed(2)}` : ''}</span>
+                </div>
+                <div className="border-t border-slate-100 pt-2 mt-2">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Invites Sent</span>
+                    <span>{client.targetInvitesSent.toLocaleString('en-US')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Spark Codes</span>
+                    <span>{client.sparkCodesAcquired.toLocaleString('en-US')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Affiliates Added</span>
+                    <span>{client.affiliatesAdded.toLocaleString('en-US')}</span>
+                  </div>
                 </div>
               </div>
             </div>

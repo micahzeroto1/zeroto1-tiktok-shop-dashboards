@@ -168,6 +168,50 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
           }}
         />
       </div>
+
+      {/* Pipeline Comparison */}
+      {pods.some((p) => p.totalSampleRequests > 0 || p.totalSamplesApproved > 0) && (
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <h3 className="text-lg font-semibold text-navy-900 mb-4">Pod Pipeline Comparison</h3>
+          <PlotlyChart
+            data={[
+              {
+                type: 'bar',
+                y: podNames,
+                x: pods.map((p) => p.totalSampleRequests),
+                name: 'Sample Requests',
+                orientation: 'h',
+                marker: { color: '#3b82f6' },
+              },
+              {
+                type: 'bar',
+                y: podNames,
+                x: pods.map((p) => p.totalSamplesApproved),
+                name: 'Approved',
+                orientation: 'h',
+                marker: { color: '#10b981' },
+              },
+              {
+                type: 'bar',
+                y: podNames,
+                x: pods.map((p) => p.totalSamplesDecline),
+                name: 'Declined',
+                orientation: 'h',
+                marker: { color: '#ef4444' },
+              },
+            ] as PlotlyData[]}
+            layout={{
+              barmode: 'group',
+              xaxis: {
+                title: { text: 'Count' },
+                tickformat: ',.0f',
+              },
+              legend: { orientation: 'h', y: -0.15 },
+              height: chartHeight,
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }

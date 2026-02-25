@@ -10,6 +10,7 @@ export function aggregatePod(
   const totalMtdGmv = clients.reduce((s, c) => s + c.cumulativeMtdGmv, 0);
   const totalMtdTarget = clients.reduce((s, c) => s + c.gmvTargetMonth, 0);
   const gmvPacing = totalMtdTarget > 0 ? totalMtdGmv / totalMtdTarget : 0;
+  const projectedMonthlyGmv = clients.reduce((s, c) => s + c.projectedMonthlyGmv, 0);
 
   const totalVideosPosted = clients.reduce((s, c) => s + c.videosPosted, 0);
   const totalVideoTarget = clients.reduce((s, c) => s + c.monthlyVideoTarget, 0);
@@ -23,6 +24,14 @@ export function aggregatePod(
     ? roiClients.reduce((s, c) => s + c.roi, 0) / roiClients.length
     : 0;
 
+  // Pipeline totals
+  const totalSampleRequests = clients.reduce((s, c) => s + c.dailySampleRequests, 0);
+  const totalSamplesDecline = clients.reduce((s, c) => s + c.samplesDecline, 0);
+  const totalAffiliatesAdded = clients.reduce((s, c) => s + c.affiliatesAdded, 0);
+  const totalContentPending = clients.reduce((s, c) => s + c.contentPending, 0);
+  const totalInvitesSent = clients.reduce((s, c) => s + c.targetInvitesSent, 0);
+  const totalSparkCodes = clients.reduce((s, c) => s + c.sparkCodesAcquired, 0);
+
   return {
     podSlug,
     podName,
@@ -30,6 +39,7 @@ export function aggregatePod(
     totalMtdTarget,
     gmvPacing,
     gmvStatus: getPacingStatus(gmvPacing),
+    projectedMonthlyGmv,
     totalVideosPosted,
     totalVideoTarget,
     totalSamplesApproved,
@@ -37,6 +47,12 @@ export function aggregatePod(
     totalAdSpend,
     totalSpendTarget,
     avgRoi,
+    totalSampleRequests,
+    totalSamplesDecline,
+    totalAffiliatesAdded,
+    totalContentPending,
+    totalInvitesSent,
+    totalSparkCodes,
     clients,
   };
 }
@@ -47,6 +63,9 @@ export function aggregateCompany(pods: PodSummary[]): Omit<CeoApiResponse, 'last
   const companyGmvPacing = companyMtdTarget > 0
     ? companyMtdGmv / companyMtdTarget
     : 0;
+
+  // Sum projected monthly GMV from all pods
+  const projectedMonthlyGmv = pods.reduce((s, p) => s + p.projectedMonthlyGmv, 0);
 
   // Project annual GMV from current month pace
   const now = new Date();
@@ -64,6 +83,7 @@ export function aggregateCompany(pods: PodSummary[]): Omit<CeoApiResponse, 'last
     companyMtdTarget,
     companyGmvPacing,
     companyGmvStatus: getPacingStatus(companyGmvPacing),
+    projectedMonthlyGmv,
     annualTarget: config.annualGmvTarget,
     projectedAnnualGmv,
     pods,
