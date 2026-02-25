@@ -103,6 +103,7 @@ export interface ClientApiResponse {
   weeklyData: WeeklyRollup[];
   monthlyData: MonthlyAggregate[];
   skuBreakdown?: SkuData[];
+  lastUpdated: string;
 }
 
 export interface MonthlyAggregate {
@@ -142,6 +143,7 @@ export interface PodApiResponse {
   podName: string;
   podSlug: string;
   clients: ClientMtdSummary[];
+  lastUpdated: string;
 }
 
 export interface PodSummary {
@@ -170,4 +172,5 @@ export interface CeoApiResponse {
   projectedAnnualGmv: number;
   pods: PodSummary[];
   allClients: ClientMtdSummary[];
+  lastUpdated: string;
 }

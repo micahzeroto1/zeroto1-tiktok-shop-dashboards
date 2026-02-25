@@ -9,6 +9,16 @@ function num(val: string | undefined): number {
   return isNaN(parsed) ? 0 : parsed;
 }
 
+/** Check if a month string matches the current calendar month */
+export function isCurrentMonth(monthStr: string): boolean {
+  if (!monthStr) return false;
+  const lower = monthStr.toLowerCase().trim();
+  const now = new Date();
+  const longMonth = now.toLocaleString('default', { month: 'long' }).toLowerCase();
+  const shortMonth = now.toLocaleString('default', { month: 'short' }).toLowerCase();
+  return lower.includes(longMonth) || lower.includes(shortMonth) || longMonth.includes(lower);
+}
+
 export function parseRawTab(rows: string[][]): DailyMetrics[] {
   // Row 0 = note/warning, Row 1 = headers, data starts at Row 2
   return rows.slice(2).filter((row) => row[RAW_COLUMNS.date]?.trim()).map((row) => ({
@@ -52,7 +62,8 @@ export function parseRawTab(rows: string[][]): DailyMetrics[] {
 }
 
 export function parseRollupTab(rows: string[][]): WeeklyRollup[] {
-  return rows.slice(2).filter((row) => row[ROLLUP_COLUMNS.date]?.trim()).map((row) => ({
+  // Rollup tabs: Row 0 = headers only (no note row), data starts at Row 1
+  return rows.slice(1).filter((row) => row[ROLLUP_COLUMNS.date]?.trim()).map((row) => ({
     weekLabel: row[ROLLUP_COLUMNS.weekLabel] || '',
     date: row[ROLLUP_COLUMNS.date] || '',
     monthlyVideoPostedPacing: num(row[ROLLUP_COLUMNS.monthlyVideoPostedPacing]),
@@ -84,24 +95,89 @@ export function parseRollupTab(rows: string[][]): WeeklyRollup[] {
   }));
 }
 
+/** Aggregate rollup daily rows into one summary per week, filtering empty future weeks */
+export function aggregateWeekly(rollupData: WeeklyRollup[]): WeeklyRollup[] {
+  const weekMap = new Map<string, WeeklyRollup[]>();
+
+  for (const row of rollupData) {
+    const key = row.weekLabel?.trim() || row.date;
+    if (!key) continue;
+    const existing = weekMap.get(key) || [];
+    existing.push(row);
+    weekMap.set(key, existing);
+  }
+
+  const result: WeeklyRollup[] = [];
+  weekMap.forEach((days, weekLabel) => {
+    const last = days[days.length - 1];
+    const roiDays = days.filter((d) => d.roi > 0);
+
+    result.push({
+      weekLabel,
+      date: last.date,
+      // Summed metrics for the week
+      dailyGmv: days.reduce((s, d) => s + d.dailyGmv, 0),
+      gmvTarget: days.reduce((s, d) => s + d.dailyTargetGmv, 0), // weekly target = sum of daily targets
+      videosPosted: days.reduce((s, d) => s + d.videosPosted, 0),
+      totalSamplesApproved: days.reduce((s, d) => s + d.totalSamplesApproved, 0),
+      adSpend: days.reduce((s, d) => s + d.adSpend, 0),
+      spendTarget: days.reduce((s, d) => s + d.spendTarget, 0),
+      roi: roiDays.length > 0 ? roiDays.reduce((s, d) => s + d.roi, 0) / roiDays.length : 0,
+      roiTarget: last.roiTarget,
+      // Cumulative/pacing from the last day of the week
+      cumulativeMtdGmv: last.cumulativeMtdGmv,
+      projectedMonthlyGmv: last.projectedMonthlyGmv,
+      projectedGmvDelta: last.projectedGmvDelta,
+      gmvPacing: last.gmvPacing,
+      monthlyGmvPacing: last.monthlyGmvPacing,
+      monthlyVideoPostedPacing: last.monthlyVideoPostedPacing,
+      samplingPacing: last.samplingPacing,
+      dailyTargetGmv: days.reduce((s, d) => s + d.dailyTargetGmv, 0),
+      monthlyVideoTarget: last.monthlyVideoTarget,
+      targetSamplesGoals: last.targetSamplesGoals,
+      affiliatesAdded: days.reduce((s, d) => s + d.affiliatesAdded, 0),
+      contentPending: days.reduce((s, d) => s + d.contentPending, 0),
+      videosConverted: days.reduce((s, d) => s + d.videosConverted, 0),
+      sparkCodesAcquired: days.reduce((s, d) => s + d.sparkCodesAcquired, 0),
+      targetInvitesSent: days.reduce((s, d) => s + d.targetInvitesSent, 0),
+      dailySampleRequests: days.reduce((s, d) => s + d.dailySampleRequests, 0),
+      samplesDecline: days.reduce((s, d) => s + d.samplesDecline, 0),
+      samplesRemain: last.samplesRemain,
+    });
+  });
+
+  // Filter out weeks with no actual data (pre-populated future weeks)
+  return result.filter((w) =>
+    w.dailyGmv > 0 || w.videosPosted > 0 || w.totalSamplesApproved > 0 || w.adSpend > 0
+  );
+}
+
 export function parseSkuData(
   rows: string[][],
   skus: SkuConfig[]
 ): SkuData[] {
-  // Sum SKU columns across all data rows for the current month
-  const currentMonth = new Date().toLocaleString('default', { month: 'long' });
-  const dataRows = rows.slice(2).filter(
-    (row) => row[RAW_COLUMNS.date]?.trim() && row[RAW_COLUMNS.month]?.includes(currentMonth)
-  );
+  // Sum SKU columns across data rows for the current month with actual activity
+  const dataRows = rows.slice(2).filter((row) => {
+    const date = row[RAW_COLUMNS.date]?.trim();
+    const month = row[RAW_COLUMNS.month] || '';
+    if (!date) return false;
+    if (!isCurrentMonth(month)) return false;
+    // Only include rows with some activity
+    return (
+      num(row[RAW_COLUMNS.dailyGmv]) > 0 ||
+      num(row[RAW_COLUMNS.videosPosted]) > 0 ||
+      num(row[RAW_COLUMNS.totalSamplesApproved]) > 0
+    );
+  });
 
   return skus.map((sku) => {
     const colIdx = RAW_COLUMNS.skuStart + sku.columnOffset;
     let sampleRequests = 0;
     let samplesApproved = 0;
     for (const row of dataRows) {
-      // SKU columns contain sample data; interpret as approved counts
-      samplesApproved += num(row[colIdx]);
-      sampleRequests += num(row[colIdx]); // same column for now
+      const val = num(row[colIdx]);
+      samplesApproved += val;
+      sampleRequests += val;
     }
     return { name: sku.name, sampleRequests, samplesApproved };
   });
@@ -118,15 +194,21 @@ export function aggregateByMonth(daily: DailyMetrics[]): MonthlyAggregate[] {
 
   const result: MonthlyAggregate[] = [];
   byMonth.forEach((days, month) => {
-    const totalGmv = days.reduce((s, d) => s + d.dailyGmv, 0);
+    // Only include days with actual activity
+    const activeDays = days.filter(
+      (d) => d.dailyGmv > 0 || d.videosPosted > 0 || d.totalSamplesApproved > 0
+    );
+    if (activeDays.length === 0) return; // Skip months with no data
+
+    const totalGmv = activeDays.reduce((s, d) => s + d.dailyGmv, 0);
     const gmvTarget = days[0]?.gmvTargetMonth || 0;
-    const totalVideosPosted = days.reduce((s, d) => s + d.videosPosted, 0);
+    const totalVideosPosted = activeDays.reduce((s, d) => s + d.videosPosted, 0);
     const videoTarget = days[0]?.monthlyVideoTarget || 0;
-    const totalSamplesApproved = days.reduce((s, d) => s + d.totalSamplesApproved, 0);
+    const totalSamplesApproved = activeDays.reduce((s, d) => s + d.totalSamplesApproved, 0);
     const samplesTarget = days[0]?.targetSamplesGoals || 0;
-    const totalAdSpend = days.reduce((s, d) => s + d.adSpend, 0);
+    const totalAdSpend = activeDays.reduce((s, d) => s + d.adSpend, 0);
     const spendTarget = days[0]?.spendTarget || 0;
-    const roiDays = days.filter((d) => d.roi > 0);
+    const roiDays = activeDays.filter((d) => d.roi > 0);
     const avgRoi = roiDays.length > 0
       ? roiDays.reduce((s, d) => s + d.roi, 0) / roiDays.length
       : 0;

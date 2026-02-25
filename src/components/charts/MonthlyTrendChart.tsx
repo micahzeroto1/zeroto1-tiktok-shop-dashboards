@@ -9,6 +9,8 @@ interface MonthlyTrendChartProps {
 }
 
 export default function MonthlyTrendChart({ monthlyData }: MonthlyTrendChartProps) {
+  // monthlyData is already filtered (no empty months) by aggregateByMonth()
+  // Only show chart if there are at least 2 months of data
   if (monthlyData.length < 2) return null;
 
   const months = monthlyData.map((m) => m.month);
@@ -50,12 +52,17 @@ export default function MonthlyTrendChart({ monthlyData }: MonthlyTrendChartProp
         data={data}
         layout={{
           xaxis: { title: { text: 'Month' } },
-          yaxis: { title: { text: 'GMV ($)' }, tickprefix: '$', side: 'left' },
+          yaxis: {
+            title: { text: 'GMV ($)' },
+            tickprefix: '$',
+            tickformat: ',.0f',
+            side: 'left',
+          },
           yaxis2: {
             title: { text: 'ROI' },
             overlaying: 'y',
             side: 'right',
-            tickformat: '.1f',
+            tickformat: '.2f',
           },
           legend: { orientation: 'h', y: -0.2 },
           height: 350,

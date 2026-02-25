@@ -9,21 +9,30 @@ interface PodComparisonChartProps {
 }
 
 export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
+  if (pods.length === 0) return null;
+
   const podNames = pods.map((p) => p.podName);
+  const gmvValues = pods.map((p) => p.totalMtdGmv);
+  const targetValues = pods.map((p) => p.totalMtdTarget);
+
+  // Calculate sensible axis range — at least $100 if all values are 0
+  const maxVal = Math.max(...gmvValues, ...targetValues, 100);
 
   const data: PlotlyData[] = [
     {
       type: 'bar',
       y: podNames,
-      x: pods.map((p) => p.totalMtdGmv),
+      x: gmvValues,
       name: 'MTD GMV',
       orientation: 'h',
       marker: { color: '#10b981' },
+      text: gmvValues.map((v) => `$${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}`),
+      textposition: 'outside',
     },
     {
       type: 'bar',
       y: podNames,
-      x: pods.map((p) => p.totalMtdTarget),
+      x: targetValues,
       name: 'Target',
       orientation: 'h',
       marker: { color: 'rgba(239, 68, 68, 0.3)' },
@@ -37,7 +46,12 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
         data={data}
         layout={{
           barmode: 'group',
-          xaxis: { title: { text: 'GMV ($)' }, tickprefix: '$' },
+          xaxis: {
+            title: { text: 'GMV ($)' },
+            tickprefix: '$',
+            tickformat: ',.0f',
+            range: [0, maxVal * 1.15],
+          },
           legend: { orientation: 'h', y: -0.15 },
           height: Math.max(250, pods.length * 80),
         }}

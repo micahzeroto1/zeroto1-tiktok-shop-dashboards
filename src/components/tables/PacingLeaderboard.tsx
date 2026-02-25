@@ -29,13 +29,20 @@ export default function PacingLeaderboard({ clients }: PacingLeaderboardProps) {
     },
   ];
 
+  // Calculate sensible x-axis range
+  const maxPacing = Math.max(120, ...sorted.map((c) => c.gmvPacing * 100 + 15));
+
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6">
       <h3 className="text-lg font-semibold text-navy-900 mb-4">MTD GMV Pacing Leaderboard</h3>
       <PlotlyChart
         data={data}
         layout={{
-          xaxis: { title: { text: 'GMV Pacing %' }, range: [0, Math.max(120, ...sorted.map((c) => c.gmvPacing * 100 + 15))] },
+          xaxis: {
+            title: { text: 'GMV Pacing %' },
+            range: [0, maxPacing],
+            ticksuffix: '%',
+          },
           showlegend: false,
           height: Math.max(250, sorted.length * 50),
           shapes: [

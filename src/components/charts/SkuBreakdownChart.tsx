@@ -9,20 +9,22 @@ interface SkuBreakdownChartProps {
 }
 
 export default function SkuBreakdownChart({ skuData }: SkuBreakdownChartProps) {
-  if (!skuData.length) return null;
+  // Filter out SKUs with no data
+  const activeSkus = skuData.filter((s) => s.samplesApproved > 0 || s.sampleRequests > 0);
+  if (activeSkus.length === 0) return null;
 
   const data: PlotlyData[] = [
     {
       type: 'bar',
-      x: skuData.map((s) => s.name),
-      y: skuData.map((s) => s.samplesApproved),
+      x: activeSkus.map((s) => s.name),
+      y: activeSkus.map((s) => s.samplesApproved),
       name: 'Samples Approved',
       marker: { color: '#10b981' },
     },
     {
       type: 'bar',
-      x: skuData.map((s) => s.name),
-      y: skuData.map((s) => s.sampleRequests),
+      x: activeSkus.map((s) => s.name),
+      y: activeSkus.map((s) => s.sampleRequests),
       name: 'Sample Requests',
       marker: { color: '#6366f1' },
     },

@@ -47,7 +47,7 @@ export default function ScoreCardGrid({ scorecard }: ScoreCardGridProps) {
         value={scorecard.roi}
         target={scorecard.roiTarget}
         status={scorecard.roiStatus}
-        format="number"
+        format="roi"
       />
     </div>
   );

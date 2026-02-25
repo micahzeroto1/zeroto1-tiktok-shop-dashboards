@@ -19,6 +19,7 @@ export default function ClientDashboardPage() {
         <DashboardShell
           title={`${data.clientName} Dashboard`}
           subtitle="TikTok Shop Performance"
+          lastUpdated={data.lastUpdated}
         >
           {/* MTD Scorecard */}
           <section className="mb-8">

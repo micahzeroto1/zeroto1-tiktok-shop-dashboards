@@ -15,6 +15,10 @@ function getStatusBadge(status: string): string {
   return 'bg-rose-100 text-rose-800';
 }
 
+function fmtCurrency(val: number): string {
+  return `$${val.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+}
+
 export default function ClientDrillTable({ clients }: ClientDrillTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>('gmvPacing');
   const [sortDesc, setSortDesc] = useState(true);
@@ -38,7 +42,7 @@ export default function ClientDrillTable({ clients }: ClientDrillTableProps) {
   }
 
   const sortIcon = (key: SortKey) =>
-    sortKey === key ? (sortDesc ? ' ↓' : ' ↑') : '';
+    sortKey === key ? (sortDesc ? ' \u2193' : ' \u2191') : '';
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6 overflow-x-auto">
@@ -73,16 +77,16 @@ export default function ClientDrillTable({ clients }: ClientDrillTableProps) {
           {sorted.map((c) => (
             <tr key={c.clientSlug} className="border-b border-slate-100 hover:bg-slate-50">
               <td className="py-3 px-2 font-medium">{c.clientName}</td>
-              <td className="py-3 px-2 text-right">${c.cumulativeMtdGmv.toLocaleString('en-US', { maximumFractionDigits: 0 })}</td>
+              <td className="py-3 px-2 text-right">{fmtCurrency(c.cumulativeMtdGmv)}</td>
               <td className="py-3 px-2 text-center">
                 <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${getStatusBadge(c.gmvStatus)}`}>
                   {(c.gmvPacing * 100).toFixed(0)}%
                 </span>
               </td>
-              <td className="py-3 px-2 text-right">{c.videosPosted}</td>
-              <td className="py-3 px-2 text-right">{c.totalSamplesApproved}</td>
-              <td className="py-3 px-2 text-right">${c.adSpend.toLocaleString('en-US', { maximumFractionDigits: 0 })}</td>
-              <td className="py-3 px-2 text-right">{c.roi.toFixed(1)}</td>
+              <td className="py-3 px-2 text-right">{c.videosPosted.toLocaleString('en-US')}</td>
+              <td className="py-3 px-2 text-right">{c.totalSamplesApproved.toLocaleString('en-US')}</td>
+              <td className="py-3 px-2 text-right">{fmtCurrency(c.adSpend)}</td>
+              <td className="py-3 px-2 text-right">{c.roi.toFixed(2)}</td>
             </tr>
           ))}
         </tbody>

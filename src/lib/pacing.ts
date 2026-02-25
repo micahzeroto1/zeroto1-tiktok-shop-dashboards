@@ -1,20 +1,44 @@
 import { getPacingStatus } from '@/config/constants';
+import { isCurrentMonth } from '@/lib/data-parser';
 import type { DailyMetrics, MtdScorecard } from '@/types/dashboard';
 
 export function buildMtdScorecard(daily: DailyMetrics[]): MtdScorecard {
-  // Get the most recent day with data for cumulative metrics
-  const latest = daily[daily.length - 1];
-  if (!latest) {
+  if (daily.length === 0) {
     return emptyScorecard();
   }
 
-  // Sum MTD totals from daily data for the current month
-  const currentMonthDays = daily.filter((d) => d.month === latest.month);
-  const mtdVideosPosted = currentMonthDays.reduce((s, d) => s + d.videosPosted, 0);
-  const mtdSamplesApproved = currentMonthDays.reduce((s, d) => s + d.totalSamplesApproved, 0);
-  const mtdAdSpend = currentMonthDays.reduce((s, d) => s + d.adSpend, 0);
+  // Filter to the current calendar month
+  const currentMonthDays = daily.filter((d) => isCurrentMonth(d.month));
 
-  // Use cumulative values from the latest row
+  // If no data for current month, try the most recent month with data
+  const targetDays = currentMonthDays.length > 0
+    ? currentMonthDays
+    : getLatestMonthDays(daily);
+
+  if (targetDays.length === 0) {
+    return emptyScorecard();
+  }
+
+  // Find the latest row with actual activity (non-zero cumulative GMV or any metric)
+  const activeRows = targetDays.filter(
+    (d) => d.cumulativeMtdGmv > 0 || d.dailyGmv > 0 || d.videosPosted > 0 || d.totalSamplesApproved > 0
+  );
+
+  // Use latest active row for cumulative metrics; fall back to first row for targets
+  const latest = activeRows.length > 0
+    ? activeRows[activeRows.length - 1]
+    : targetDays[0];
+
+  // Only sum days that have actual activity
+  const daysWithActivity = targetDays.filter(
+    (d) => d.dailyGmv > 0 || d.videosPosted > 0 || d.totalSamplesApproved > 0 || d.adSpend > 0
+  );
+
+  const mtdVideosPosted = daysWithActivity.reduce((s, d) => s + d.videosPosted, 0);
+  const mtdSamplesApproved = daysWithActivity.reduce((s, d) => s + d.totalSamplesApproved, 0);
+  const mtdAdSpend = daysWithActivity.reduce((s, d) => s + d.adSpend, 0);
+
+  // Use cumulative values from the latest active row
   const gmvPacing = latest.gmvTargetMonth > 0
     ? latest.cumulativeMtdGmv / latest.gmvTargetMonth
     : 0;
@@ -26,11 +50,11 @@ export function buildMtdScorecard(daily: DailyMetrics[]): MtdScorecard {
     : 0;
 
   // For spend/ROI, use cumulative month values
-  const mtdSpendTarget = currentMonthDays.reduce((s, d) => s + d.spendTarget, 0);
+  const mtdSpendTarget = daysWithActivity.reduce((s, d) => s + d.spendTarget, 0);
   const spendPacing = mtdSpendTarget > 0 ? mtdAdSpend / mtdSpendTarget : 0;
 
   // ROI: average of days with non-zero ROI
-  const roiDays = currentMonthDays.filter((d) => d.roi > 0);
+  const roiDays = daysWithActivity.filter((d) => d.roi > 0);
   const avgRoi = roiDays.length > 0
     ? roiDays.reduce((s, d) => s + d.roi, 0) / roiDays.length
     : 0;
@@ -60,6 +84,17 @@ export function buildMtdScorecard(daily: DailyMetrics[]): MtdScorecard {
     roiTarget: latest.roiTarget,
     roiStatus,
   };
+}
+
+/** Get daily data for the most recent month that has any activity */
+function getLatestMonthDays(daily: DailyMetrics[]): DailyMetrics[] {
+  for (let i = daily.length - 1; i >= 0; i--) {
+    if (daily[i].dailyGmv > 0 || daily[i].videosPosted > 0 || daily[i].totalSamplesApproved > 0) {
+      const targetMonth = daily[i].month;
+      return daily.filter((d) => d.month === targetMonth);
+    }
+  }
+  return [];
 }
 
 function emptyScorecard(): MtdScorecard {

@@ -8,10 +8,21 @@ interface WeeklyBarChartProps {
   weeklyData: WeeklyRollup[];
 }
 
+/** Shorten week labels for the x-axis (e.g., "Week 1" → "W1") */
+function shortenLabel(label: string): string {
+  const weekMatch = label.match(/week\s*(\d+)/i);
+  if (weekMatch) return `W${weekMatch[1]}`;
+  if (label.length <= 8) return label;
+  return label.substring(0, 8);
+}
+
 export default function WeeklyBarChart({ weeklyData }: WeeklyBarChartProps) {
-  const labels = weeklyData.map((w) => w.weekLabel || w.date);
+  // Data is already aggregated and filtered by aggregateWeekly()
+  if (weeklyData.length === 0) return null;
+
+  const labels = weeklyData.map((w) => shortenLabel(w.weekLabel || w.date));
   const gmvValues = weeklyData.map((w) => w.dailyGmv);
-  const targetValues = weeklyData.map((w) => w.gmvTarget);
+  const targetValues = weeklyData.map((w) => w.gmvTarget); // weekly target = sum of daily targets
 
   // Last bar is current (partial) week — use lighter color
   const colors = gmvValues.map((_, i) =>
@@ -25,12 +36,14 @@ export default function WeeklyBarChart({ weeklyData }: WeeklyBarChartProps) {
       y: gmvValues,
       name: 'GMV Actual',
       marker: { color: colors },
+      text: gmvValues.map((v) => `$${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}`),
+      textposition: 'outside',
     },
     {
       type: 'scatter',
       x: labels,
       y: targetValues,
-      name: 'GMV Target',
+      name: 'Weekly Target',
       mode: 'lines',
       line: { color: '#ef4444', width: 2, dash: 'dash' },
     },
@@ -43,8 +56,12 @@ export default function WeeklyBarChart({ weeklyData }: WeeklyBarChartProps) {
         data={data}
         layout={{
           barmode: 'group',
-          xaxis: { title: { text: 'Week' } },
-          yaxis: { title: { text: 'GMV ($)' }, tickprefix: '$' },
+          xaxis: { title: { text: 'Week' }, tickangle: 0 },
+          yaxis: {
+            title: { text: 'GMV ($)' },
+            tickprefix: '$',
+            tickformat: ',.0f',
+          },
           legend: { orientation: 'h', y: -0.2 },
           height: 350,
         }}

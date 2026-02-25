@@ -26,6 +26,7 @@ export async function GET(
       podName: pod.displayName,
       podSlug: pod.slug,
       clients: [],
+      lastUpdated: new Date().toISOString(),
     } satisfies PodApiResponse);
   }
 
@@ -65,6 +66,7 @@ export async function GET(
       podName: pod.displayName,
       podSlug: pod.slug,
       clients,
+      lastUpdated: new Date().toISOString(),
     };
 
     return NextResponse.json(response);

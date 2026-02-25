@@ -59,7 +59,10 @@ export async function GET(request: NextRequest) {
     const podSummaries = await Promise.all(podDataPromises);
     const response = aggregateCompany(podSummaries);
 
-    return NextResponse.json(response);
+    return NextResponse.json({
+      ...response,
+      lastUpdated: new Date().toISOString(),
+    });
   } catch (error) {
     console.error('CEO API error:', error);
     return NextResponse.json(

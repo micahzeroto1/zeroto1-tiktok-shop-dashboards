@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateClientToken } from '@/lib/auth';
 import { fetchSheetRanges } from '@/lib/google-sheets';
-import { parseRawTab, parseRollupTab, parseSkuData, aggregateByMonth } from '@/lib/data-parser';
+import { parseRawTab, parseRollupTab, parseSkuData, aggregateByMonth, aggregateWeekly } from '@/lib/data-parser';
 import { buildMtdScorecard } from '@/lib/pacing';
 import { CACHE_REVALIDATE_SECONDS } from '@/config/constants';
 import type { ClientApiResponse } from '@/types/dashboard';
@@ -34,7 +34,8 @@ export async function GET(
     const [rawRows, rollupRows] = await fetchSheetRanges(pod.spreadsheetId, ranges);
 
     const dailyData = parseRawTab(rawRows);
-    const weeklyData = parseRollupTab(rollupRows);
+    const rawWeeklyData = parseRollupTab(rollupRows);
+    const weeklyData = aggregateWeekly(rawWeeklyData);
     const mtdScorecard = buildMtdScorecard(dailyData);
     const monthlyData = aggregateByMonth(dailyData);
 
@@ -42,12 +43,20 @@ export async function GET(
       ? parseSkuData(rawRows, client.skus)
       : undefined;
 
+    // Filter out SKU breakdown if all values are zero
+    const filteredSkuBreakdown = skuBreakdown?.some(
+      (s) => s.sampleRequests > 0 || s.samplesApproved > 0
+    )
+      ? skuBreakdown
+      : undefined;
+
     const response: ClientApiResponse = {
       clientName: client.displayName,
       mtdScorecard,
       weeklyData,
       monthlyData,
-      skuBreakdown,
+      skuBreakdown: filteredSkuBreakdown,
+      lastUpdated: new Date().toISOString(),
     };
 
     return NextResponse.json(response);

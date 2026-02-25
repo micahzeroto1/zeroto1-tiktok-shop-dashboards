@@ -9,6 +9,10 @@ import PacingLeaderboard from '@/components/tables/PacingLeaderboard';
 import { getPacingStatus } from '@/config/constants';
 import type { PodApiResponse } from '@/types/dashboard';
 
+function fmtCurrency(val: number): string {
+  return `$${val.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+}
+
 export default function PodDashboardPage() {
   const { slug } = useParams<{ slug: string }>();
 
@@ -21,11 +25,16 @@ export default function PodDashboardPage() {
         const totalVideos = data.clients.reduce((s, c) => s + c.videosPosted, 0);
         const totalVideoTarget = data.clients.reduce((s, c) => s + c.monthlyVideoTarget, 0);
         const videoPacing = totalVideoTarget > 0 ? totalVideos / totalVideoTarget : 0;
+        const roiClients = data.clients.filter((c) => c.roi > 0);
+        const avgRoi = roiClients.length > 0
+          ? roiClients.reduce((s, c) => s + c.roi, 0) / roiClients.length
+          : 0;
 
         return (
           <DashboardShell
             title={`${data.podName} Dashboard`}
             subtitle="Pod Performance Overview"
+            lastUpdated={data.lastUpdated}
           >
             {/* Pod Summary KPIs */}
             <section className="mb-8">
@@ -54,13 +63,9 @@ export default function PodDashboardPage() {
                 />
                 <KpiCard
                   label="Avg ROI"
-                  value={
-                    data.clients.length > 0
-                      ? data.clients.reduce((s, c) => s + c.roi, 0) / data.clients.length
-                      : 0
-                  }
+                  value={avgRoi}
                   status="green"
-                  format="number"
+                  format="roi"
                 />
               </div>
             </section>
@@ -77,7 +82,7 @@ export default function PodDashboardPage() {
               </section>
             )}
 
-            {/* Per-Client Weekly Scorecard Grid */}
+            {/* Per-Client Scorecard Grid */}
             <section className="mb-8">
               <h2 className="text-xl font-bold text-navy-900 mb-4">Client Scorecards</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -90,7 +95,7 @@ export default function PodDashboardPage() {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-slate-500">MTD GMV</span>
-                        <span className="font-medium">${client.cumulativeMtdGmv.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
+                        <span className="font-medium">{fmtCurrency(client.cumulativeMtdGmv)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-500">Pacing</span>
@@ -103,11 +108,11 @@ export default function PodDashboardPage() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-500">Videos</span>
-                        <span>{client.videosPosted} / {client.monthlyVideoTarget}</span>
+                        <span>{client.videosPosted.toLocaleString('en-US')} / {client.monthlyVideoTarget.toLocaleString('en-US')}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-500">ROI</span>
-                        <span>{client.roi.toFixed(1)}</span>
+                        <span>{client.roi.toFixed(2)}</span>
                       </div>
                     </div>
                   </div>

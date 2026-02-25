@@ -8,6 +8,10 @@ import ClientDrillTable from '@/components/tables/ClientDrillTable';
 import { getPacingStatus } from '@/config/constants';
 import type { CeoApiResponse } from '@/types/dashboard';
 
+function fmtCurrency(val: number): string {
+  return `$${val.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+}
+
 export default function CeoDashboardPage() {
   return (
     <TokenGate apiPath="/api/ceo">
@@ -18,6 +22,7 @@ export default function CeoDashboardPage() {
           <DashboardShell
             title="CEO Dashboard"
             subtitle="Company-Wide TikTok Shop Performance"
+            lastUpdated={data.lastUpdated}
           >
             {/* Company Totals */}
             <section className="mb-8">
@@ -72,11 +77,11 @@ export default function CeoDashboardPage() {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-slate-500">MTD GMV</span>
-                        <span className="font-medium">${pod.totalMtdGmv.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
+                        <span className="font-medium">{fmtCurrency(pod.totalMtdGmv)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-500">Target</span>
-                        <span>${pod.totalMtdTarget.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
+                        <span>{fmtCurrency(pod.totalMtdTarget)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-500">Pacing</span>
@@ -89,11 +94,11 @@ export default function CeoDashboardPage() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-500">Videos Posted</span>
-                        <span>{pod.totalVideosPosted} / {pod.totalVideoTarget}</span>
+                        <span>{pod.totalVideosPosted.toLocaleString('en-US')} / {pod.totalVideoTarget.toLocaleString('en-US')}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-500">Avg ROI</span>
-                        <span>{pod.avgRoi.toFixed(1)}</span>
+                        <span>{pod.avgRoi.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-500">Clients</span>

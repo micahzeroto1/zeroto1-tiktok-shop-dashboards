@@ -6,7 +6,7 @@ interface KpiCardProps {
   target?: number;
   pacing?: number;
   status: 'green' | 'yellow' | 'red';
-  format?: 'currency' | 'percent' | 'number';
+  format?: 'currency' | 'percent' | 'number' | 'roi';
 }
 
 const statusStyles = {
@@ -21,17 +21,20 @@ const statusDot = {
   red: 'bg-rose-500',
 };
 
-function formatValue(value: number, format?: 'currency' | 'percent' | 'number'): string {
+function formatValue(value: number, format?: 'currency' | 'percent' | 'number' | 'roi'): string {
   if (format === 'currency') {
     if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
-    if (value >= 1_000) return `$${(value / 1_000).toFixed(1)}K`;
-    return `$${value.toFixed(0)}`;
+    if (value >= 1_000) return `$${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+    return `$${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
   }
   if (format === 'percent') {
     return `${(value * 100).toFixed(1)}%`;
   }
-  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
-  return value.toFixed(0);
+  if (format === 'roi') {
+    return value.toFixed(2);
+  }
+  if (value >= 1_000) return value.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  return value.toLocaleString('en-US', { maximumFractionDigits: 0 });
 }
 
 export default function KpiCard({ label, value, target, pacing, status, format }: KpiCardProps) {

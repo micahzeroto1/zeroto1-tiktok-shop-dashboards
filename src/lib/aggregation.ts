@@ -41,7 +41,7 @@ export function aggregatePod(
   };
 }
 
-export function aggregateCompany(pods: PodSummary[]): CeoApiResponse {
+export function aggregateCompany(pods: PodSummary[]): Omit<CeoApiResponse, 'lastUpdated'> {
   const companyMtdGmv = pods.reduce((s, p) => s + p.totalMtdGmv, 0);
   const companyMtdTarget = pods.reduce((s, p) => s + p.totalMtdTarget, 0);
   const companyGmvPacing = companyMtdTarget > 0
