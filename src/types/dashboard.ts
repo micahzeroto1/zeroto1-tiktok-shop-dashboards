@@ -85,7 +85,6 @@ export interface MtdScorecard {
   monthlyVideoTarget: number;
   videoPacing: number;
   videoStatus: 'green' | 'yellow' | 'red';
-  videosConverted: number;
   totalSamplesApproved: number;
   targetSamplesGoals: number;
   samplesPacing: number;
@@ -98,13 +97,9 @@ export interface MtdScorecard {
   roiTarget: number;
   roiStatus: 'green' | 'yellow' | 'red';
   // Pipeline metrics
-  affiliatesAdded: number;
-  contentPending: number;
   sparkCodesAcquired: number;
   targetInvitesSent: number;
-  dailySampleRequests: number;
   samplesDecline: number;
-  samplesRemain: number;
   l0Approved: number;
   l1Approved: number;
   l2Approved: number;
@@ -153,7 +148,6 @@ export interface ClientMtdSummary {
   projectedMonthlyGmv: number;
   videosPosted: number;
   monthlyVideoTarget: number;
-  videosConverted: number;
   totalSamplesApproved: number;
   targetSamplesGoals: number;
   adSpend: number;
@@ -161,13 +155,9 @@ export interface ClientMtdSummary {
   roi: number;
   roiTarget: number;
   // Pipeline metrics
-  affiliatesAdded: number;
-  contentPending: number;
   sparkCodesAcquired: number;
   targetInvitesSent: number;
-  dailySampleRequests: number;
   samplesDecline: number;
-  samplesRemain: number;
   l0Approved: number;
   l1Approved: number;
   l2Approved: number;
@@ -202,10 +192,7 @@ export interface PodSummary {
   totalSpendTarget: number;
   avgRoi: number;
   // Pipeline totals
-  totalSampleRequests: number;
   totalSamplesDecline: number;
-  totalAffiliatesAdded: number;
-  totalContentPending: number;
   totalInvitesSent: number;
   totalSparkCodes: number;
   clients: ClientMtdSummary[];

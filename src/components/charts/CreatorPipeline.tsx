@@ -14,15 +14,10 @@ function fmtNumber(val: number): string {
 
 export default function CreatorPipeline({ scorecard }: CreatorPipelineProps) {
   const {
-    dailySampleRequests,
     totalSamplesApproved,
     samplesDecline,
-    samplesRemain,
-    affiliatesAdded,
-    contentPending,
     sparkCodesAcquired,
     targetInvitesSent,
-    videosConverted,
     l0Approved,
     l1Approved,
     l2Approved,
@@ -32,20 +27,18 @@ export default function CreatorPipeline({ scorecard }: CreatorPipelineProps) {
     l6Approved,
   } = scorecard;
 
-  // Sample requests vs approvals vs declines bar chart
+  // Samples approved vs declined bar chart
   const sampleBarData: PlotlyData[] = [
     {
       type: 'bar',
-      x: ['Sample Requests', 'Approved', 'Declined', 'Remaining'],
-      y: [dailySampleRequests, totalSamplesApproved, samplesDecline, samplesRemain],
+      x: ['Approved', 'Declined'],
+      y: [totalSamplesApproved, samplesDecline],
       marker: {
-        color: ['#3b82f6', '#10b981', '#ef4444', '#f59e0b'],
+        color: ['#10b981', '#ef4444'],
       },
       text: [
-        fmtNumber(dailySampleRequests),
         fmtNumber(totalSamplesApproved),
         fmtNumber(samplesDecline),
-        fmtNumber(samplesRemain),
       ],
       textposition: 'outside',
     },
@@ -70,17 +63,14 @@ export default function CreatorPipeline({ scorecard }: CreatorPipelineProps) {
     },
   ];
 
-  // Pipeline KPI cards
+  // Pipeline KPI cards (only reliable metrics)
   const pipelineKpis = [
-    { label: 'Affiliates Added', value: affiliatesAdded },
-    { label: 'Content Pending', value: contentPending },
     { label: 'Invites Sent', value: targetInvitesSent },
     { label: 'Spark Codes', value: sparkCodesAcquired },
-    { label: 'Videos Converted', value: videosConverted },
   ];
 
-  const hasAnyData = dailySampleRequests > 0 || totalSamplesApproved > 0 ||
-    affiliatesAdded > 0 || contentPending > 0 || hasLevelData;
+  const hasAnyData = totalSamplesApproved > 0 || samplesDecline > 0 ||
+    targetInvitesSent > 0 || sparkCodesAcquired > 0 || hasLevelData;
 
   if (!hasAnyData) return null;
 
@@ -89,7 +79,7 @@ export default function CreatorPipeline({ scorecard }: CreatorPipelineProps) {
       <h2 className="text-xl font-bold text-navy-900">Creator Pipeline</h2>
 
       {/* Pipeline KPI row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         {pipelineKpis.map((kpi) => (
           <div
             key={kpi.label}
@@ -102,9 +92,9 @@ export default function CreatorPipeline({ scorecard }: CreatorPipelineProps) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Sample Requests vs Approvals */}
+        {/* Samples Approved vs Declined */}
         <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h3 className="text-lg font-semibold text-navy-900 mb-4">Sample Requests Overview</h3>
+          <h3 className="text-lg font-semibold text-navy-900 mb-4">Samples Approved vs Declined</h3>
           <PlotlyChart
             data={sampleBarData}
             layout={{

@@ -194,10 +194,6 @@ function PodDashboardContent({ data }: { data: PodApiResponse }) {
                     <span className="text-slate-500">Spark Codes</span>
                     <span>{client.sparkCodesAcquired.toLocaleString('en-US')}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Affiliates Added</span>
-                    <span>{client.affiliatesAdded.toLocaleString('en-US')}</span>
-                  </div>
                 </div>
               </div>
             </div>

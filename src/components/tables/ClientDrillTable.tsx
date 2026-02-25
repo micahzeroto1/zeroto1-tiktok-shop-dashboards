@@ -83,6 +83,8 @@ export default function ClientDrillTable({ clients }: ClientDrillTableProps) {
             <th className="text-right py-3 px-2 font-semibold text-slate-600 cursor-pointer" onClick={() => handleSort('roi')}>
               ROI{sortIcon('roi')}
             </th>
+            <th className="text-right py-3 px-2 font-semibold text-slate-500 text-xs">Content/Sample</th>
+            <th className="text-right py-3 px-2 font-semibold text-slate-500 text-xs">GMV/Video</th>
           </tr>
         </thead>
         <tbody>
@@ -127,6 +129,16 @@ export default function ClientDrillTable({ clients }: ClientDrillTableProps) {
                   <TargetCell value={c.spendTarget} format="currency" />
                 </td>
                 <td className="py-3 px-2 text-right">{c.roi.toFixed(2)}</td>
+                <td className="py-3 px-2 text-right text-slate-500">
+                  {c.totalSamplesApproved > 0
+                    ? (c.videosPosted / c.totalSamplesApproved).toFixed(2)
+                    : 'N/A'}
+                </td>
+                <td className="py-3 px-2 text-right text-slate-500">
+                  {c.videosPosted > 0
+                    ? fmtCurrency(c.cumulativeMtdGmv / c.videosPosted)
+                    : 'N/A'}
+                </td>
               </tr>
             );
           })}

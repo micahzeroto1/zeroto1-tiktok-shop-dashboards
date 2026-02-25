@@ -78,10 +78,9 @@ export default function DailyHeatmap({ clients }: DailyHeatmapProps) {
             <th className="text-right py-3 px-2 font-semibold text-slate-600">Samples</th>
             <th className="text-right py-3 px-2 font-semibold text-slate-600">Ad Spend</th>
             <th className="text-right py-3 px-2 font-semibold text-slate-600">ROI</th>
-            <th className="text-right py-3 px-2 font-semibold text-slate-600 text-xs">Samp Req</th>
+            <th className="text-right py-3 px-2 font-semibold text-slate-600 text-xs">Content/Sample</th>
+            <th className="text-right py-3 px-2 font-semibold text-slate-600 text-xs">GMV/Video</th>
             <th className="text-right py-3 px-2 font-semibold text-slate-600 text-xs">Samp Dec</th>
-            <th className="text-right py-3 px-2 font-semibold text-slate-600 text-xs">Affiliates</th>
-            <th className="text-right py-3 px-2 font-semibold text-slate-600 text-xs">Content Pend</th>
           </tr>
         </thead>
         <tbody>
@@ -134,10 +133,17 @@ export default function DailyHeatmap({ clients }: DailyHeatmapProps) {
                 <td className="py-3 px-2 text-right">{client.totalSamplesApproved.toLocaleString('en-US')}</td>
                 <td className="py-3 px-2 text-right">{fmtCurrency(client.adSpend)}</td>
                 <td className="py-3 px-2 text-right">{client.roi.toFixed(2)}</td>
-                <td className="py-3 px-2 text-right text-slate-500">{client.dailySampleRequests.toLocaleString('en-US')}</td>
+                <td className="py-3 px-2 text-right text-slate-500">
+                  {client.totalSamplesApproved > 0
+                    ? (client.videosPosted / client.totalSamplesApproved).toFixed(2)
+                    : 'N/A'}
+                </td>
+                <td className="py-3 px-2 text-right text-slate-500">
+                  {client.videosPosted > 0
+                    ? fmtCurrency(client.cumulativeMtdGmv / client.videosPosted)
+                    : 'N/A'}
+                </td>
                 <td className="py-3 px-2 text-right text-slate-500">{client.samplesDecline.toLocaleString('en-US')}</td>
-                <td className="py-3 px-2 text-right text-slate-500">{client.affiliatesAdded.toLocaleString('en-US')}</td>
-                <td className="py-3 px-2 text-right text-slate-500">{client.contentPending.toLocaleString('en-US')}</td>
               </tr>
             );
           })}

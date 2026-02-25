@@ -156,20 +156,8 @@ export default function CeoDashboardPage() {
                         {/* Pipeline metrics */}
                         <div className="border-t border-slate-100 pt-2 mt-2">
                           <div className="flex justify-between">
-                            <span className="text-slate-500">Sample Requests</span>
-                            <span>{pod.totalSampleRequests.toLocaleString('en-US')}</span>
-                          </div>
-                          <div className="flex justify-between">
                             <span className="text-slate-500">Samples Declined</span>
                             <span>{pod.totalSamplesDecline.toLocaleString('en-US')}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-slate-500">Affiliates Added</span>
-                            <span>{pod.totalAffiliatesAdded.toLocaleString('en-US')}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-slate-500">Content Pending</span>
-                            <span>{pod.totalContentPending.toLocaleString('en-US')}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-slate-500">Invites Sent</span>

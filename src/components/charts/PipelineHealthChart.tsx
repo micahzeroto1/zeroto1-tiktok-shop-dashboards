@@ -39,20 +39,13 @@ export default function PipelineHealthChart({ clients }: PipelineHealthChartProp
     marker: { color: colors[i] },
   }));
 
-  // Sample requests vs approvals vs declines grouped bar
+  // Samples approved vs declined grouped bar
   const hasSampleData = clients.some(
-    (c) => c.dailySampleRequests > 0 || c.totalSamplesApproved > 0 || c.samplesDecline > 0
+    (c) => c.totalSamplesApproved > 0 || c.samplesDecline > 0
   );
 
   const sampleData: PlotlyData[] = hasSampleData
     ? [
-        {
-          type: 'bar',
-          name: 'Requests',
-          x: clientNames,
-          y: clients.map((c) => c.dailySampleRequests),
-          marker: { color: '#3b82f6' },
-        },
         {
           type: 'bar',
           name: 'Approved',
@@ -79,7 +72,7 @@ export default function PipelineHealthChart({ clients }: PipelineHealthChartProp
       {hasSampleData && (
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <h3 className="text-lg font-semibold text-navy-900 mb-4">
-            Sample Requests vs Approvals vs Declines
+            Samples Approved vs Declined
           </h3>
           <PlotlyChart
             data={sampleData}

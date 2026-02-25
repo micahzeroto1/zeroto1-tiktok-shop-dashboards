@@ -25,10 +25,7 @@ export function aggregatePod(
     : 0;
 
   // Pipeline totals
-  const totalSampleRequests = clients.reduce((s, c) => s + c.dailySampleRequests, 0);
   const totalSamplesDecline = clients.reduce((s, c) => s + c.samplesDecline, 0);
-  const totalAffiliatesAdded = clients.reduce((s, c) => s + c.affiliatesAdded, 0);
-  const totalContentPending = clients.reduce((s, c) => s + c.contentPending, 0);
   const totalInvitesSent = clients.reduce((s, c) => s + c.targetInvitesSent, 0);
   const totalSparkCodes = clients.reduce((s, c) => s + c.sparkCodesAcquired, 0);
 
@@ -47,10 +44,7 @@ export function aggregatePod(
     totalAdSpend,
     totalSpendTarget,
     avgRoi,
-    totalSampleRequests,
     totalSamplesDecline,
-    totalAffiliatesAdded,
-    totalContentPending,
     totalInvitesSent,
     totalSparkCodes,
     clients,
