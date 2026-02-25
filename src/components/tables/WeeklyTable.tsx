@@ -1,5 +1,6 @@
 'use client';
 
+import { buildWeekLabels } from '@/lib/week-labels';
 import type { WeeklyRollup } from '@/types/dashboard';
 
 interface WeeklyTableProps {
@@ -14,17 +15,10 @@ function fmtNumber(val: number): string {
   return val.toLocaleString('en-US', { maximumFractionDigits: 0 });
 }
 
-/** Shorten week labels (e.g., "Week 1" → "W1") */
-function shortenLabel(label: string): string {
-  const weekMatch = label.match(/week\s*(\d+)/i);
-  if (weekMatch) return `W${weekMatch[1]}`;
-  if (label.length <= 8) return label;
-  return label.substring(0, 8);
-}
-
 export default function WeeklyTable({ weeklyData }: WeeklyTableProps) {
-  // Data comes from pre-aggregated weekly rollup rows
   if (weeklyData.length === 0) return null;
+
+  const labels = buildWeekLabels(weeklyData);
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6 overflow-x-auto">
@@ -44,7 +38,7 @@ export default function WeeklyTable({ weeklyData }: WeeklyTableProps) {
         <tbody>
           {weeklyData.map((week, i) => (
             <tr key={i} className="border-b border-slate-100 hover:bg-slate-50">
-              <td className="py-3 px-2 font-medium">{shortenLabel(week.weekLabel || week.date)}</td>
+              <td className="py-3 px-2 font-medium">{labels[i]}</td>
               <td className="py-3 px-2 text-right">{fmtCurrency(week.dailyGmv)}</td>
               <td className="py-3 px-2 text-right text-slate-500">{fmtCurrency(week.gmvTarget)}</td>
               <td className="py-3 px-2 text-right">{fmtNumber(week.videosPosted)}</td>

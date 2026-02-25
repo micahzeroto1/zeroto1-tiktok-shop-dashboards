@@ -18,6 +18,15 @@ export default function CeoDashboardPage() {
       {(data: CeoApiResponse) => {
         const monthlyTarget = data.annualTarget / 12;
 
+        // Data health: count clients with targets set
+        const allClients = data.allClients;
+        const total = allClients.length;
+        const gmvReporting = allClients.filter((c) => c.gmvTargetMonth > 0).length;
+
+        function companyWarning(reporting: number): string | undefined {
+          return reporting < total ? `${reporting} of ${total} clients reporting` : undefined;
+        }
+
         return (
           <DashboardShell
             title="CEO Dashboard"
@@ -35,6 +44,7 @@ export default function CeoDashboardPage() {
                   pacing={data.companyGmvPacing}
                   status={data.companyGmvStatus}
                   format="currency"
+                  warning={companyWarning(gmvReporting)}
                 />
                 <KpiCard
                   label="Monthly Target"
@@ -68,49 +78,90 @@ export default function CeoDashboardPage() {
             <section className="mb-8">
               <h2 className="text-xl font-bold text-navy-900 mb-4">Pod Breakdown</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {data.pods.map((pod) => (
-                  <div
-                    key={pod.podSlug}
-                    className="bg-white rounded-xl border border-slate-200 p-5"
-                  >
-                    <h4 className="font-semibold text-navy-900 text-lg mb-3">{pod.podName}</h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">MTD GMV</span>
-                        <span className="font-medium">{fmtCurrency(pod.totalMtdGmv)} / {fmtCurrency(pod.totalMtdTarget)}</span>
+                {data.pods.map((pod) => {
+                  const podTotal = pod.clients.length;
+                  const podGmvR = pod.clients.filter((c) => c.gmvTargetMonth > 0).length;
+                  const podVideoR = pod.clients.filter((c) => c.monthlyVideoTarget > 0).length;
+                  const podSamplesR = pod.clients.filter((c) => c.targetSamplesGoals > 0).length;
+                  const podSpendR = pod.clients.filter((c) => c.spendTarget > 0).length;
+
+                  function podWarn(reporting: number): string {
+                    return reporting < podTotal ? ` (${reporting}/${podTotal})` : '';
+                  }
+
+                  return (
+                    <div
+                      key={pod.podSlug}
+                      className="bg-white rounded-xl border border-slate-200 p-5"
+                    >
+                      <h4 className="font-semibold text-navy-900 text-lg mb-3">{pod.podName}</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">MTD GMV</span>
+                          <span className="font-medium">
+                            {fmtCurrency(pod.totalMtdGmv)} / {fmtCurrency(pod.totalMtdTarget)}
+                            {podGmvR < podTotal && (
+                              <span className="text-amber-600 text-xs ml-1" title={`${podGmvR} of ${podTotal} clients have GMV targets`}>⚠</span>
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Pacing</span>
+                          <span className={`font-bold ${
+                            pod.gmvStatus === 'green' ? 'text-emerald-600' :
+                            pod.gmvStatus === 'yellow' ? 'text-amber-600' : 'text-rose-600'
+                          }`}>
+                            {(pod.gmvPacing * 100).toFixed(0)}%
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Videos Posted</span>
+                          <span>
+                            {pod.totalVideosPosted.toLocaleString('en-US')} / {pod.totalVideoTarget.toLocaleString('en-US')}
+                            {podVideoR < podTotal && (
+                              <span className="text-amber-600 text-xs ml-1">⚠</span>
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Samples Approved</span>
+                          <span>
+                            {pod.totalSamplesApproved.toLocaleString('en-US')} / {pod.totalSamplesTarget.toLocaleString('en-US')}
+                            {podSamplesR < podTotal && (
+                              <span className="text-amber-600 text-xs ml-1">⚠</span>
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Ad Spend</span>
+                          <span>
+                            {fmtCurrency(pod.totalAdSpend)} / {fmtCurrency(pod.totalSpendTarget)}
+                            {podSpendR < podTotal && (
+                              <span className="text-amber-600 text-xs ml-1">⚠</span>
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Avg ROI</span>
+                          <span>{pod.avgRoi.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Clients</span>
+                          <span>{pod.clients.length}</span>
+                        </div>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Pacing</span>
-                        <span className={`font-bold ${
-                          pod.gmvStatus === 'green' ? 'text-emerald-600' :
-                          pod.gmvStatus === 'yellow' ? 'text-amber-600' : 'text-rose-600'
-                        }`}>
-                          {(pod.gmvPacing * 100).toFixed(0)}%
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Videos Posted</span>
-                        <span>{pod.totalVideosPosted.toLocaleString('en-US')} / {pod.totalVideoTarget.toLocaleString('en-US')}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Samples Approved</span>
-                        <span>{pod.totalSamplesApproved.toLocaleString('en-US')} / {pod.totalSamplesTarget.toLocaleString('en-US')}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Ad Spend</span>
-                        <span>{fmtCurrency(pod.totalAdSpend)} / {fmtCurrency(pod.totalSpendTarget)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Avg ROI</span>
-                        <span>{pod.avgRoi.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Clients</span>
-                        <span>{pod.clients.length}</span>
-                      </div>
+                      {(podGmvR < podTotal || podVideoR < podTotal || podSamplesR < podTotal || podSpendR < podTotal) && (
+                        <div className="mt-3 text-xs text-amber-600 border-t border-amber-200 pt-2">
+                          ⚠ {podWarn(podGmvR) && `GMV${podWarn(podGmvR)}`}
+                          {podVideoR < podTotal && ` Video${podWarn(podVideoR)}`}
+                          {podSamplesR < podTotal && ` Samples${podWarn(podSamplesR)}`}
+                          {podSpendR < podTotal && ` Spend${podWarn(podSpendR)}`}
+                          {' '}— incomplete targets
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
 

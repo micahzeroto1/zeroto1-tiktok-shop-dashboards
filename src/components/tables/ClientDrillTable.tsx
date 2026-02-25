@@ -19,6 +19,14 @@ function fmtCurrency(val: number): string {
   return `$${val.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 }
 
+/** Render value or "No target" indicator when target is zero */
+function TargetCell({ value, format }: { value: number; format: 'currency' | 'number' }) {
+  if (value === 0) {
+    return <span className="text-amber-600 text-xs font-medium">No target</span>;
+  }
+  return <>{format === 'currency' ? fmtCurrency(value) : value.toLocaleString('en-US')}</>;
+}
+
 export default function ClientDrillTable({ clients }: ClientDrillTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>('gmvPacing');
   const [sortDesc, setSortDesc] = useState(true);
@@ -78,25 +86,50 @@ export default function ClientDrillTable({ clients }: ClientDrillTableProps) {
           </tr>
         </thead>
         <tbody>
-          {sorted.map((c) => (
-            <tr key={c.clientSlug} className="border-b border-slate-100 hover:bg-slate-50">
-              <td className="py-3 px-2 font-medium">{c.clientName}</td>
-              <td className="py-3 px-2 text-right">{fmtCurrency(c.cumulativeMtdGmv)}</td>
-              <td className="py-3 px-2 text-right text-slate-500">{fmtCurrency(c.gmvTargetMonth)}</td>
-              <td className="py-3 px-2 text-center">
-                <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${getStatusBadge(c.gmvStatus)}`}>
-                  {(c.gmvPacing * 100).toFixed(0)}%
-                </span>
-              </td>
-              <td className="py-3 px-2 text-right">{c.videosPosted.toLocaleString('en-US')}</td>
-              <td className="py-3 px-2 text-right text-slate-500">{c.monthlyVideoTarget.toLocaleString('en-US')}</td>
-              <td className="py-3 px-2 text-right">{c.totalSamplesApproved.toLocaleString('en-US')}</td>
-              <td className="py-3 px-2 text-right text-slate-500">{c.targetSamplesGoals.toLocaleString('en-US')}</td>
-              <td className="py-3 px-2 text-right">{fmtCurrency(c.adSpend)}</td>
-              <td className="py-3 px-2 text-right text-slate-500">{fmtCurrency(c.spendTarget)}</td>
-              <td className="py-3 px-2 text-right">{c.roi.toFixed(2)}</td>
-            </tr>
-          ))}
+          {sorted.map((c) => {
+            const hasMissing = c.gmvTargetMonth === 0 || c.monthlyVideoTarget === 0 ||
+              c.targetSamplesGoals === 0 || c.spendTarget === 0;
+
+            return (
+              <tr
+                key={c.clientSlug}
+                className={`border-b hover:bg-slate-50 ${
+                  hasMissing ? 'border-dashed border-amber-300 bg-amber-50/30' : 'border-slate-100'
+                }`}
+              >
+                <td className="py-3 px-2 font-medium">
+                  {c.clientName}
+                  {hasMissing && <span className="ml-1 text-xs text-amber-600">⚠</span>}
+                </td>
+                <td className="py-3 px-2 text-right">{fmtCurrency(c.cumulativeMtdGmv)}</td>
+                <td className="py-3 px-2 text-right text-slate-500">
+                  <TargetCell value={c.gmvTargetMonth} format="currency" />
+                </td>
+                <td className="py-3 px-2 text-center">
+                  {c.gmvTargetMonth > 0 ? (
+                    <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${getStatusBadge(c.gmvStatus)}`}>
+                      {(c.gmvPacing * 100).toFixed(0)}%
+                    </span>
+                  ) : (
+                    <span className="inline-block px-2 py-1 rounded text-xs font-medium bg-slate-100 text-slate-500">—</span>
+                  )}
+                </td>
+                <td className="py-3 px-2 text-right">{c.videosPosted.toLocaleString('en-US')}</td>
+                <td className="py-3 px-2 text-right text-slate-500">
+                  <TargetCell value={c.monthlyVideoTarget} format="number" />
+                </td>
+                <td className="py-3 px-2 text-right">{c.totalSamplesApproved.toLocaleString('en-US')}</td>
+                <td className="py-3 px-2 text-right text-slate-500">
+                  <TargetCell value={c.targetSamplesGoals} format="number" />
+                </td>
+                <td className="py-3 px-2 text-right">{fmtCurrency(c.adSpend)}</td>
+                <td className="py-3 px-2 text-right text-slate-500">
+                  <TargetCell value={c.spendTarget} format="currency" />
+                </td>
+                <td className="py-3 px-2 text-right">{c.roi.toFixed(2)}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

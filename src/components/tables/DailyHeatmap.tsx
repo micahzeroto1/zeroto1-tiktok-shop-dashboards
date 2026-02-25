@@ -18,32 +18,45 @@ function fmtCurrency(val: number): string {
   return `$${val.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 }
 
-/** Get yesterday's daily data from client dailyData. Returns null if no data found. */
+/** Get yesterday's daily data from client dailyData */
 function getYesterdayData(client: ClientMtdSummary): {
   gmv: number;
-  videos: number;
-  samples: number;
-  adSpend: number;
   hasData: boolean;
 } {
   const daily = client.dailyData || [];
-  // Filter to only rows with actual activity, take the last entry as "yesterday"
   const activeDays = daily.filter(
     (d) => d.dailyGmv > 0 || d.videosPosted > 0 || d.totalSamplesApproved > 0 || d.adSpend > 0
   );
 
   if (activeDays.length === 0) {
-    return { gmv: 0, videos: 0, samples: 0, adSpend: 0, hasData: false };
+    return { gmv: 0, hasData: false };
   }
 
   const latest = activeDays[activeDays.length - 1];
-  return {
-    gmv: latest.dailyGmv,
-    videos: latest.videosPosted,
-    samples: latest.totalSamplesApproved,
-    adSpend: latest.adSpend,
-    hasData: true,
-  };
+  return { gmv: latest.dailyGmv, hasData: true };
+}
+
+/** Check if a client has any missing target fields */
+function getMissingTargets(client: ClientMtdSummary): string[] {
+  const missing: string[] = [];
+  if (client.gmvTargetMonth === 0) missing.push('GMV');
+  if (client.monthlyVideoTarget === 0) missing.push('Video');
+  if (client.targetSamplesGoals === 0) missing.push('Samples');
+  if (client.spendTarget === 0) missing.push('Spend');
+  return missing;
+}
+
+/** Render a pacing badge, or "No target" if target is zero */
+function PacingBadge({ actual, target }: { actual: number; target: number }) {
+  if (target === 0) {
+    return <span className="inline-block px-2 py-1 rounded text-xs font-medium bg-slate-100 text-slate-500">No target</span>;
+  }
+  const pacing = actual / target;
+  return (
+    <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${getHeatColor(pacing)}`}>
+      {(pacing * 100).toFixed(0)}%
+    </span>
+  );
 }
 
 export default function DailyHeatmap({ clients }: DailyHeatmapProps) {
@@ -70,40 +83,41 @@ export default function DailyHeatmap({ clients }: DailyHeatmapProps) {
         <tbody>
           {clients.map((client) => {
             const yesterday = getYesterdayData(client);
-            const videoPacing = client.monthlyVideoTarget > 0
-              ? client.videosPosted / client.monthlyVideoTarget
-              : 0;
-            const samplePacing = client.targetSamplesGoals > 0
-              ? client.totalSamplesApproved / client.targetSamplesGoals
-              : 0;
-            const spendPacing = client.spendTarget > 0
-              ? client.adSpend / client.spendTarget
-              : 0;
+            const missingTargets = getMissingTargets(client);
+            const hasMissing = missingTargets.length > 0;
 
             return (
-              <tr key={client.clientSlug} className="border-b border-slate-100 hover:bg-slate-50">
-                <td className="py-3 px-2 font-medium">{client.clientName}</td>
+              <tr
+                key={client.clientSlug}
+                className={`border-b hover:bg-slate-50 ${
+                  hasMissing ? 'border-dashed border-amber-300 bg-amber-50/30' : 'border-slate-100'
+                }`}
+              >
+                <td className="py-3 px-2 font-medium">
+                  {client.clientName}
+                  {hasMissing && (
+                    <span className="ml-1 text-xs text-amber-600" title={`Missing targets: ${missingTargets.join(', ')}`}>
+                      ⚠
+                    </span>
+                  )}
+                </td>
                 <td className="py-3 px-2 text-right">{fmtCurrency(client.cumulativeMtdGmv)}</td>
-                <td className="py-3 px-2 text-right text-slate-500">{fmtCurrency(client.gmvTargetMonth)}</td>
-                <td className="py-3 px-2 text-center">
-                  <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${getHeatColor(client.gmvPacing)}`}>
-                    {(client.gmvPacing * 100).toFixed(0)}%
-                  </span>
+                <td className="py-3 px-2 text-right text-slate-500">
+                  {client.gmvTargetMonth > 0 ? fmtCurrency(client.gmvTargetMonth) : (
+                    <span className="text-amber-600 text-xs">No target</span>
+                  )}
                 </td>
                 <td className="py-3 px-2 text-center">
-                  <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${getHeatColor(videoPacing)}`}>
-                    {(videoPacing * 100).toFixed(0)}%
-                  </span>
+                  <PacingBadge actual={client.cumulativeMtdGmv} target={client.gmvTargetMonth} />
                 </td>
                 <td className="py-3 px-2 text-center">
-                  <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${getHeatColor(samplePacing)}`}>
-                    {(samplePacing * 100).toFixed(0)}%
-                  </span>
+                  <PacingBadge actual={client.videosPosted} target={client.monthlyVideoTarget} />
                 </td>
                 <td className="py-3 px-2 text-center">
-                  <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${getHeatColor(spendPacing)}`}>
-                    {(spendPacing * 100).toFixed(0)}%
-                  </span>
+                  <PacingBadge actual={client.totalSamplesApproved} target={client.targetSamplesGoals} />
+                </td>
+                <td className="py-3 px-2 text-center">
+                  <PacingBadge actual={client.adSpend} target={client.spendTarget} />
                 </td>
                 <td className={`py-3 px-2 text-right ${!yesterday.hasData ? 'bg-amber-50' : ''}`}>
                   {yesterday.hasData ? (

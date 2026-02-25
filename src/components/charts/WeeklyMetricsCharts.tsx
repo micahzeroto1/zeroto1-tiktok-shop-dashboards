@@ -1,19 +1,12 @@
 'use client';
 
 import PlotlyChart from './PlotlyChart';
+import { buildWeekLabels } from '@/lib/week-labels';
 import type { WeeklyRollup } from '@/types/dashboard';
 import type { PlotlyData } from '@/types/plotly';
 
 interface WeeklyMetricsChartsProps {
   weeklyData: WeeklyRollup[];
-}
-
-/** Shorten week labels for the x-axis (e.g., "Week 1" → "W1") */
-function shortenLabel(label: string): string {
-  const weekMatch = label.match(/week\s*(\d+)/i);
-  if (weekMatch) return `W${weekMatch[1]}`;
-  if (label.length <= 8) return label;
-  return label.substring(0, 8);
 }
 
 function fmtNumber(val: number): string {
@@ -27,7 +20,7 @@ function fmtCurrency(val: number): string {
 export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsProps) {
   if (weeklyData.length === 0) return null;
 
-  const labels = weeklyData.map((w) => shortenLabel(w.weekLabel || w.date));
+  const labels = buildWeekLabels(weeklyData);
 
   // --- Videos Posted ---
   const videoActuals = weeklyData.map((w) => w.videosPosted);
@@ -104,6 +97,8 @@ export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsP
     },
   ];
 
+  const tickAngle = -30;
+
   return (
     <div className="space-y-6">
       {hasVideoData && (
@@ -113,10 +108,10 @@ export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsP
             data={videoData}
             layout={{
               barmode: 'group',
-              xaxis: { title: { text: 'Week' }, tickangle: 0 },
+              xaxis: { title: { text: 'Week' }, tickangle: tickAngle },
               yaxis: { title: { text: 'Videos' }, tickformat: ',.0f' },
-              legend: { orientation: 'h', y: -0.2 },
-              height: 320,
+              legend: { orientation: 'h', y: -0.25 },
+              height: 340,
             }}
           />
         </div>
@@ -129,10 +124,10 @@ export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsP
             data={sampleData}
             layout={{
               barmode: 'group',
-              xaxis: { title: { text: 'Week' }, tickangle: 0 },
+              xaxis: { title: { text: 'Week' }, tickangle: tickAngle },
               yaxis: { title: { text: 'Samples' }, tickformat: ',.0f' },
-              legend: { orientation: 'h', y: -0.2 },
-              height: 320,
+              legend: { orientation: 'h', y: -0.25 },
+              height: 340,
             }}
           />
         </div>
@@ -145,14 +140,14 @@ export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsP
             data={spendData}
             layout={{
               barmode: 'group',
-              xaxis: { title: { text: 'Week' }, tickangle: 0 },
+              xaxis: { title: { text: 'Week' }, tickangle: tickAngle },
               yaxis: {
                 title: { text: 'Spend ($)' },
                 tickprefix: '$',
                 tickformat: ',.0f',
               },
-              legend: { orientation: 'h', y: -0.2 },
-              height: 320,
+              legend: { orientation: 'h', y: -0.25 },
+              height: 340,
             }}
           />
         </div>

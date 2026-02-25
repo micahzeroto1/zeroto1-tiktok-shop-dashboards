@@ -7,6 +7,8 @@ interface KpiCardProps {
   pacing?: number;
   status: 'green' | 'yellow' | 'red';
   format?: 'currency' | 'percent' | 'number' | 'roi';
+  /** Optional warning text shown below pacing (e.g., "2 of 4 clients reporting") */
+  warning?: string;
 }
 
 const statusStyles = {
@@ -37,7 +39,9 @@ function formatValue(value: number, format?: 'currency' | 'percent' | 'number' |
   return value.toLocaleString('en-US', { maximumFractionDigits: 0 });
 }
 
-export default function KpiCard({ label, value, target, pacing, status, format }: KpiCardProps) {
+export default function KpiCard({ label, value, target, pacing, status, format, warning }: KpiCardProps) {
+  const targetIsZero = target !== undefined && target === 0;
+
   return (
     <div className={`rounded-lg border-l-4 border border-slate-200 p-4 ${statusStyles[status]}`}>
       <div className="flex items-center justify-between mb-2">
@@ -49,14 +53,26 @@ export default function KpiCard({ label, value, target, pacing, status, format }
       </div>
       {target !== undefined && (
         <div className="text-sm text-slate-500 mt-1">
-          Target: {formatValue(target, format)}
+          {targetIsZero ? (
+            <span className="text-amber-600 font-medium">No target set</span>
+          ) : (
+            <>Target: {formatValue(target, format)}</>
+          )}
         </div>
       )}
-      {pacing !== undefined && (
+      {pacing !== undefined && !targetIsZero && (
         <div className="text-sm font-medium mt-1" style={{
           color: status === 'green' ? '#10b981' : status === 'yellow' ? '#f59e0b' : '#ef4444'
         }}>
           {(pacing * 100).toFixed(0)}% pacing
+        </div>
+      )}
+      {targetIsZero && pacing !== undefined && (
+        <div className="text-sm text-slate-400 mt-1">— pacing</div>
+      )}
+      {warning && (
+        <div className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+          <span>⚠</span> {warning}
         </div>
       )}
     </div>

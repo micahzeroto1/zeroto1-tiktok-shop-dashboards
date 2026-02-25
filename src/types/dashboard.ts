@@ -143,6 +143,7 @@ export interface PodApiResponse {
   podName: string;
   podSlug: string;
   clients: ClientMtdSummary[];
+  weeklyData: WeeklyRollup[];
   lastUpdated: string;
 }
 

@@ -1,6 +1,7 @@
 'use client';
 
 import PlotlyChart from './PlotlyChart';
+import { buildWeekLabels } from '@/lib/week-labels';
 import type { WeeklyRollup } from '@/types/dashboard';
 import type { PlotlyData } from '@/types/plotly';
 
@@ -8,21 +9,12 @@ interface WeeklyBarChartProps {
   weeklyData: WeeklyRollup[];
 }
 
-/** Shorten week labels for the x-axis (e.g., "Week 1" → "W1") */
-function shortenLabel(label: string): string {
-  const weekMatch = label.match(/week\s*(\d+)/i);
-  if (weekMatch) return `W${weekMatch[1]}`;
-  if (label.length <= 8) return label;
-  return label.substring(0, 8);
-}
-
 export default function WeeklyBarChart({ weeklyData }: WeeklyBarChartProps) {
-  // Data comes from pre-aggregated weekly rollup rows
   if (weeklyData.length === 0) return null;
 
-  const labels = weeklyData.map((w) => shortenLabel(w.weekLabel || w.date));
+  const labels = buildWeekLabels(weeklyData);
   const gmvValues = weeklyData.map((w) => w.dailyGmv);
-  const targetValues = weeklyData.map((w) => w.gmvTarget); // weekly target = sum of daily targets
+  const targetValues = weeklyData.map((w) => w.gmvTarget);
 
   // Last bar is current (partial) week — use lighter color
   const colors = gmvValues.map((_, i) =>
@@ -56,14 +48,14 @@ export default function WeeklyBarChart({ weeklyData }: WeeklyBarChartProps) {
         data={data}
         layout={{
           barmode: 'group',
-          xaxis: { title: { text: 'Week' }, tickangle: 0 },
+          xaxis: { title: { text: 'Week' }, tickangle: -30 },
           yaxis: {
             title: { text: 'GMV ($)' },
             tickprefix: '$',
             tickformat: ',.0f',
           },
-          legend: { orientation: 'h', y: -0.2 },
-          height: 350,
+          legend: { orientation: 'h', y: -0.25 },
+          height: 370,
         }}
       />
     </div>
