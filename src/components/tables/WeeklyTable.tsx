@@ -23,7 +23,7 @@ function shortenLabel(label: string): string {
 }
 
 export default function WeeklyTable({ weeklyData }: WeeklyTableProps) {
-  // Data already aggregated and filtered by aggregateWeekly()
+  // Data comes from pre-aggregated weekly rollup rows
   if (weeklyData.length === 0) return null;
 
   return (

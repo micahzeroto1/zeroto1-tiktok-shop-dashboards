@@ -5,6 +5,7 @@ import TokenGate from '@/components/layout/TokenGate';
 import DashboardShell from '@/components/layout/DashboardShell';
 import ScoreCardGrid from '@/components/cards/ScoreCardGrid';
 import WeeklyBarChart from '@/components/charts/WeeklyBarChart';
+import WeeklyMetricsCharts from '@/components/charts/WeeklyMetricsCharts';
 import WeeklyTable from '@/components/tables/WeeklyTable';
 import MonthlyTrendChart from '@/components/charts/MonthlyTrendChart';
 import SkuBreakdownChart from '@/components/charts/SkuBreakdownChart';
@@ -30,6 +31,7 @@ export default function ClientDashboardPage() {
           {/* Weekly Performance */}
           <section className="mb-8 space-y-6">
             <WeeklyBarChart weeklyData={data.weeklyData} />
+            <WeeklyMetricsCharts weeklyData={data.weeklyData} />
             <WeeklyTable weeklyData={data.weeklyData} />
           </section>
 

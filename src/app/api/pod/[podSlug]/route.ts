@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validatePodToken } from '@/lib/auth';
 import { fetchSheetRanges } from '@/lib/google-sheets';
-import { parseRawTab } from '@/lib/data-parser';
-import { buildMtdScorecard } from '@/lib/pacing';
+import { parseRawTab, parseRollupTab } from '@/lib/data-parser';
+import { buildMtdScorecardFromRollup, buildMtdScorecard } from '@/lib/pacing';
 import { CACHE_REVALIDATE_SECONDS } from '@/config/constants';
 import type { ClientMtdSummary, PodApiResponse } from '@/types/dashboard';
 
@@ -31,16 +31,23 @@ export async function GET(
   }
 
   try {
-    // Fetch all client raw tabs in one batchGet
-    const ranges = pod.clients.map(
-      (c) => `'${c.rawTabName}'!A1:AZ1000`
-    );
+    // Fetch raw + rollup tabs for each client in one batchGet
+    const ranges = pod.clients.flatMap((c) => [
+      `'${c.rawTabName}'!A1:AZ1000`,
+      `'${c.rollupTabName}'!A1:AZ1000`,
+    ]);
 
     const allData = await fetchSheetRanges(pod.spreadsheetId, ranges);
 
     const clients: ClientMtdSummary[] = pod.clients.map((clientConfig, i) => {
-      const daily = parseRawTab(allData[i]);
-      const scorecard = buildMtdScorecard(daily);
+      const rawRows = allData[i * 2];
+      const rollupRows = allData[i * 2 + 1];
+
+      const daily = parseRawTab(rawRows);
+      const { monthlyRows } = parseRollupTab(rollupRows);
+
+      const scorecard =
+        buildMtdScorecardFromRollup(monthlyRows) ?? buildMtdScorecard(daily);
 
       return {
         clientSlug: clientConfig.slug,

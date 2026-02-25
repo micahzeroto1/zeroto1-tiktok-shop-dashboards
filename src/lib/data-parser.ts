@@ -19,8 +19,111 @@ export function isCurrentMonth(monthStr: string): boolean {
   return lower.includes(longMonth) || lower.includes(shortMonth) || longMonth.includes(lower);
 }
 
+const MONTH_NAMES = [
+  'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
+  'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER',
+];
+
+/**
+ * Classify a rollup-tab row by its type.
+ *
+ *   daily:   Col A = "Week XX",  Col B = date
+ *   weekly:  Col A = date,       Col B = "Week XX"
+ *   monthly: Col A = date,       Col B = month name (JANUARY …)
+ *   annual:  Col B = year (2026)
+ */
+type RollupRowType = 'daily' | 'weekly' | 'monthly' | 'annual' | 'unknown';
+
+function classifyRollupRow(row: string[]): RollupRowType {
+  const colA = (row[0] || '').trim();
+  const colB = (row[1] || '').trim();
+
+  if (/^\d{4}$/.test(colB)) return 'annual';
+  if (MONTH_NAMES.includes(colB.toUpperCase())) return 'monthly';
+  if (/^Week\s+\d+/i.test(colB)) return 'weekly';
+  if (/^Week\s+\d+/i.test(colA)) return 'daily';
+
+  return 'unknown';
+}
+
+/** Parse metric columns (index 2+) shared across all row types */
+function parseRollupMetrics(row: string[]): Omit<WeeklyRollup, 'weekLabel' | 'date'> {
+  return {
+    monthlyVideoPostedPacing: num(row[ROLLUP_COLUMNS.monthlyVideoPostedPacing]),
+    samplingPacing: num(row[ROLLUP_COLUMNS.samplingPacing]),
+    monthlyGmvPacing: num(row[ROLLUP_COLUMNS.monthlyGmvPacing]),
+    dailyTargetGmv: num(row[ROLLUP_COLUMNS.dailyTargetGmv]),
+    cumulativeMtdGmv: num(row[ROLLUP_COLUMNS.cumulativeMtdGmv]),
+    projectedMonthlyGmv: num(row[ROLLUP_COLUMNS.projectedMonthlyGmv]),
+    projectedGmvDelta: num(row[ROLLUP_COLUMNS.projectedGmvDelta]),
+    gmvPacing: num(row[ROLLUP_COLUMNS.gmvPacing]),
+    affiliatesAdded: num(row[ROLLUP_COLUMNS.affiliatesAdded]),
+    contentPending: num(row[ROLLUP_COLUMNS.contentPending]),
+    videosPosted: num(row[ROLLUP_COLUMNS.videosPosted]),
+    monthlyVideoTarget: num(row[ROLLUP_COLUMNS.monthlyVideoTarget]),
+    videosConverted: num(row[ROLLUP_COLUMNS.videosConverted]),
+    sparkCodesAcquired: num(row[ROLLUP_COLUMNS.sparkCodesAcquired]),
+    targetInvitesSent: num(row[ROLLUP_COLUMNS.targetInvitesSent]),
+    dailySampleRequests: num(row[ROLLUP_COLUMNS.dailySampleRequests]),
+    totalSamplesApproved: num(row[ROLLUP_COLUMNS.totalSamplesApproved]),
+    targetSamplesGoals: num(row[ROLLUP_COLUMNS.targetSamplesGoals]),
+    samplesDecline: num(row[ROLLUP_COLUMNS.samplesDecline]),
+    samplesRemain: num(row[ROLLUP_COLUMNS.samplesRemain]),
+    dailyGmv: num(row[ROLLUP_COLUMNS.dailyGmv]),
+    gmvTarget: num(row[ROLLUP_COLUMNS.gmvTarget]),
+    adSpend: num(row[ROLLUP_COLUMNS.adSpend]),
+    spendTarget: num(row[ROLLUP_COLUMNS.spendTarget]),
+    roi: num(row[ROLLUP_COLUMNS.roi]),
+    roiTarget: num(row[ROLLUP_COLUMNS.roiTarget]),
+  };
+}
+
+export interface RollupData {
+  /** Weekly rollup rows (Col A = date, Col B = "Week XX") */
+  weeklyRows: WeeklyRollup[];
+  /** Monthly rollup rows (Col A = date, Col B = month name) */
+  monthlyRows: WeeklyRollup[];
+}
+
+/**
+ * Parse a rollup tab, classifying rows and returning only weekly and monthly
+ * rollup rows.  Daily rows and annual rows are discarded.
+ *
+ * For weekly & monthly rows Col A / Col B are swapped compared to daily rows:
+ *   Col A = date,  Col B = label ("Week XX" or "FEBRUARY").
+ */
+export function parseRollupTab(rows: string[][]): RollupData {
+  const weeklyRows: WeeklyRollup[] = [];
+  const monthlyRows: WeeklyRollup[] = [];
+
+  // Row 0 = headers, data starts at Row 1
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row || row.length < 2) continue;
+
+    const type = classifyRollupRow(row);
+
+    if (type === 'weekly') {
+      weeklyRows.push({
+        weekLabel: (row[1] || '').trim(), // Col B → "Week XX"
+        date: (row[0] || '').trim(),      // Col A → date
+        ...parseRollupMetrics(row),
+      });
+    } else if (type === 'monthly') {
+      monthlyRows.push({
+        weekLabel: (row[1] || '').trim(), // Col B → month name
+        date: (row[0] || '').trim(),      // Col A → date
+        ...parseRollupMetrics(row),
+      });
+    }
+  }
+
+  return { weeklyRows, monthlyRows };
+}
+
+// ─── Raw-tab parsing (unchanged) ────────────────────────────────────────────
+
 export function parseRawTab(rows: string[][]): DailyMetrics[] {
-  // Row 0 = note/warning, Row 1 = headers, data starts at Row 2
   return rows.slice(2).filter((row) => row[RAW_COLUMNS.date]?.trim()).map((row) => ({
     date: row[RAW_COLUMNS.date] || '',
     month: row[RAW_COLUMNS.month] || '',
@@ -61,108 +164,12 @@ export function parseRawTab(rows: string[][]): DailyMetrics[] {
   }));
 }
 
-export function parseRollupTab(rows: string[][]): WeeklyRollup[] {
-  // Rollup tabs: Row 0 = headers only (no note row), data starts at Row 1
-  return rows.slice(1).filter((row) => row[ROLLUP_COLUMNS.date]?.trim()).map((row) => ({
-    weekLabel: row[ROLLUP_COLUMNS.weekLabel] || '',
-    date: row[ROLLUP_COLUMNS.date] || '',
-    monthlyVideoPostedPacing: num(row[ROLLUP_COLUMNS.monthlyVideoPostedPacing]),
-    samplingPacing: num(row[ROLLUP_COLUMNS.samplingPacing]),
-    monthlyGmvPacing: num(row[ROLLUP_COLUMNS.monthlyGmvPacing]),
-    dailyTargetGmv: num(row[ROLLUP_COLUMNS.dailyTargetGmv]),
-    cumulativeMtdGmv: num(row[ROLLUP_COLUMNS.cumulativeMtdGmv]),
-    projectedMonthlyGmv: num(row[ROLLUP_COLUMNS.projectedMonthlyGmv]),
-    projectedGmvDelta: num(row[ROLLUP_COLUMNS.projectedGmvDelta]),
-    gmvPacing: num(row[ROLLUP_COLUMNS.gmvPacing]),
-    affiliatesAdded: num(row[ROLLUP_COLUMNS.affiliatesAdded]),
-    contentPending: num(row[ROLLUP_COLUMNS.contentPending]),
-    videosPosted: num(row[ROLLUP_COLUMNS.videosPosted]),
-    monthlyVideoTarget: num(row[ROLLUP_COLUMNS.monthlyVideoTarget]),
-    videosConverted: num(row[ROLLUP_COLUMNS.videosConverted]),
-    sparkCodesAcquired: num(row[ROLLUP_COLUMNS.sparkCodesAcquired]),
-    targetInvitesSent: num(row[ROLLUP_COLUMNS.targetInvitesSent]),
-    dailySampleRequests: num(row[ROLLUP_COLUMNS.dailySampleRequests]),
-    totalSamplesApproved: num(row[ROLLUP_COLUMNS.totalSamplesApproved]),
-    targetSamplesGoals: num(row[ROLLUP_COLUMNS.targetSamplesGoals]),
-    samplesDecline: num(row[ROLLUP_COLUMNS.samplesDecline]),
-    samplesRemain: num(row[ROLLUP_COLUMNS.samplesRemain]),
-    dailyGmv: num(row[ROLLUP_COLUMNS.dailyGmv]),
-    gmvTarget: num(row[ROLLUP_COLUMNS.gmvTarget]),
-    adSpend: num(row[ROLLUP_COLUMNS.adSpend]),
-    spendTarget: num(row[ROLLUP_COLUMNS.spendTarget]),
-    roi: num(row[ROLLUP_COLUMNS.roi]),
-    roiTarget: num(row[ROLLUP_COLUMNS.roiTarget]),
-  }));
-}
-
-/** Aggregate rollup daily rows into one summary per week, filtering empty future weeks */
-export function aggregateWeekly(rollupData: WeeklyRollup[]): WeeklyRollup[] {
-  const weekMap = new Map<string, WeeklyRollup[]>();
-
-  for (const row of rollupData) {
-    const key = row.weekLabel?.trim() || row.date;
-    if (!key) continue;
-    const existing = weekMap.get(key) || [];
-    existing.push(row);
-    weekMap.set(key, existing);
-  }
-
-  const result: WeeklyRollup[] = [];
-  weekMap.forEach((days, weekLabel) => {
-    const last = days[days.length - 1];
-    const roiDays = days.filter((d) => d.roi > 0);
-
-    result.push({
-      weekLabel,
-      date: last.date,
-      // Summed metrics for the week
-      dailyGmv: days.reduce((s, d) => s + d.dailyGmv, 0),
-      gmvTarget: days.reduce((s, d) => s + d.dailyTargetGmv, 0), // weekly target = sum of daily targets
-      videosPosted: days.reduce((s, d) => s + d.videosPosted, 0),
-      totalSamplesApproved: days.reduce((s, d) => s + d.totalSamplesApproved, 0),
-      adSpend: days.reduce((s, d) => s + d.adSpend, 0),
-      spendTarget: days.reduce((s, d) => s + d.spendTarget, 0),
-      roi: roiDays.length > 0 ? roiDays.reduce((s, d) => s + d.roi, 0) / roiDays.length : 0,
-      roiTarget: last.roiTarget,
-      // Cumulative/pacing from the last day of the week
-      cumulativeMtdGmv: last.cumulativeMtdGmv,
-      projectedMonthlyGmv: last.projectedMonthlyGmv,
-      projectedGmvDelta: last.projectedGmvDelta,
-      gmvPacing: last.gmvPacing,
-      monthlyGmvPacing: last.monthlyGmvPacing,
-      monthlyVideoPostedPacing: last.monthlyVideoPostedPacing,
-      samplingPacing: last.samplingPacing,
-      dailyTargetGmv: days.reduce((s, d) => s + d.dailyTargetGmv, 0),
-      monthlyVideoTarget: last.monthlyVideoTarget,
-      targetSamplesGoals: last.targetSamplesGoals,
-      affiliatesAdded: days.reduce((s, d) => s + d.affiliatesAdded, 0),
-      contentPending: days.reduce((s, d) => s + d.contentPending, 0),
-      videosConverted: days.reduce((s, d) => s + d.videosConverted, 0),
-      sparkCodesAcquired: days.reduce((s, d) => s + d.sparkCodesAcquired, 0),
-      targetInvitesSent: days.reduce((s, d) => s + d.targetInvitesSent, 0),
-      dailySampleRequests: days.reduce((s, d) => s + d.dailySampleRequests, 0),
-      samplesDecline: days.reduce((s, d) => s + d.samplesDecline, 0),
-      samplesRemain: last.samplesRemain,
-    });
-  });
-
-  // Filter out weeks with no actual data (pre-populated future weeks)
-  return result.filter((w) =>
-    w.dailyGmv > 0 || w.videosPosted > 0 || w.totalSamplesApproved > 0 || w.adSpend > 0
-  );
-}
-
-export function parseSkuData(
-  rows: string[][],
-  skus: SkuConfig[]
-): SkuData[] {
-  // Sum SKU columns across data rows for the current month with actual activity
+export function parseSkuData(rows: string[][], skus: SkuConfig[]): SkuData[] {
   const dataRows = rows.slice(2).filter((row) => {
     const date = row[RAW_COLUMNS.date]?.trim();
     const month = row[RAW_COLUMNS.month] || '';
     if (!date) return false;
     if (!isCurrentMonth(month)) return false;
-    // Only include rows with some activity
     return (
       num(row[RAW_COLUMNS.dailyGmv]) > 0 ||
       num(row[RAW_COLUMNS.videosPosted]) > 0 ||
@@ -194,38 +201,28 @@ export function aggregateByMonth(daily: DailyMetrics[]): MonthlyAggregate[] {
 
   const result: MonthlyAggregate[] = [];
   byMonth.forEach((days, month) => {
-    // Only include days with actual activity
     const activeDays = days.filter(
       (d) => d.dailyGmv > 0 || d.videosPosted > 0 || d.totalSamplesApproved > 0
     );
-    if (activeDays.length === 0) return; // Skip months with no data
-
-    const totalGmv = activeDays.reduce((s, d) => s + d.dailyGmv, 0);
-    const gmvTarget = days[0]?.gmvTargetMonth || 0;
-    const totalVideosPosted = activeDays.reduce((s, d) => s + d.videosPosted, 0);
-    const videoTarget = days[0]?.monthlyVideoTarget || 0;
-    const totalSamplesApproved = activeDays.reduce((s, d) => s + d.totalSamplesApproved, 0);
-    const samplesTarget = days[0]?.targetSamplesGoals || 0;
-    const totalAdSpend = activeDays.reduce((s, d) => s + d.adSpend, 0);
-    const spendTarget = days[0]?.spendTarget || 0;
-    const roiDays = activeDays.filter((d) => d.roi > 0);
-    const avgRoi = roiDays.length > 0
-      ? roiDays.reduce((s, d) => s + d.roi, 0) / roiDays.length
-      : 0;
-    const roiTarget = days[0]?.roiTarget || 0;
+    if (activeDays.length === 0) return;
 
     result.push({
       month,
-      totalGmv,
-      gmvTarget,
-      totalVideosPosted,
-      videoTarget,
-      totalSamplesApproved,
-      samplesTarget,
-      totalAdSpend,
-      spendTarget,
-      avgRoi,
-      roiTarget,
+      totalGmv: activeDays.reduce((s, d) => s + d.dailyGmv, 0),
+      gmvTarget: days[0]?.gmvTargetMonth || 0,
+      totalVideosPosted: activeDays.reduce((s, d) => s + d.videosPosted, 0),
+      videoTarget: days[0]?.monthlyVideoTarget || 0,
+      totalSamplesApproved: activeDays.reduce((s, d) => s + d.totalSamplesApproved, 0),
+      samplesTarget: days[0]?.targetSamplesGoals || 0,
+      totalAdSpend: activeDays.reduce((s, d) => s + d.adSpend, 0),
+      spendTarget: days[0]?.spendTarget || 0,
+      avgRoi: (() => {
+        const roiDays = activeDays.filter((d) => d.roi > 0);
+        return roiDays.length > 0
+          ? roiDays.reduce((s, d) => s + d.roi, 0) / roiDays.length
+          : 0;
+      })(),
+      roiTarget: days[0]?.roiTarget || 0,
     });
   });
 

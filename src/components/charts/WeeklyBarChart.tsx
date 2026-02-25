@@ -17,7 +17,7 @@ function shortenLabel(label: string): string {
 }
 
 export default function WeeklyBarChart({ weeklyData }: WeeklyBarChartProps) {
-  // Data is already aggregated and filtered by aggregateWeekly()
+  // Data comes from pre-aggregated weekly rollup rows
   if (weeklyData.length === 0) return null;
 
   const labels = weeklyData.map((w) => shortenLabel(w.weekLabel || w.date));

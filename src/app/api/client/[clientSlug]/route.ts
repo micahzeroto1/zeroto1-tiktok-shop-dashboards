@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateClientToken } from '@/lib/auth';
 import { fetchSheetRanges } from '@/lib/google-sheets';
-import { parseRawTab, parseRollupTab, parseSkuData, aggregateByMonth, aggregateWeekly } from '@/lib/data-parser';
-import { buildMtdScorecard } from '@/lib/pacing';
+import { parseRawTab, parseRollupTab, parseSkuData, aggregateByMonth } from '@/lib/data-parser';
+import { buildMtdScorecardFromRollup, buildMtdScorecard } from '@/lib/pacing';
 import { CACHE_REVALIDATE_SECONDS } from '@/config/constants';
 import type { ClientApiResponse } from '@/types/dashboard';
 
@@ -34,16 +34,22 @@ export async function GET(
     const [rawRows, rollupRows] = await fetchSheetRanges(pod.spreadsheetId, ranges);
 
     const dailyData = parseRawTab(rawRows);
-    const rawWeeklyData = parseRollupTab(rollupRows);
-    const weeklyData = aggregateWeekly(rawWeeklyData);
-    const mtdScorecard = buildMtdScorecard(dailyData);
+    const { weeklyRows, monthlyRows } = parseRollupTab(rollupRows);
     const monthlyData = aggregateByMonth(dailyData);
+
+    // Scorecard: prefer rollup monthly row, fall back to raw daily data
+    const mtdScorecard =
+      buildMtdScorecardFromRollup(monthlyRows) ?? buildMtdScorecard(dailyData);
+
+    // Weekly data: only pre-aggregated weekly rollup rows with actual data
+    const weeklyData = weeklyRows.filter(
+      (w) => w.dailyGmv > 0 || w.videosPosted > 0 || w.totalSamplesApproved > 0 || w.adSpend > 0
+    );
 
     const skuBreakdown = client.skus
       ? parseSkuData(rawRows, client.skus)
       : undefined;
 
-    // Filter out SKU breakdown if all values are zero
     const filteredSkuBreakdown = skuBreakdown?.some(
       (s) => s.sampleRequests > 0 || s.samplesApproved > 0
     )
