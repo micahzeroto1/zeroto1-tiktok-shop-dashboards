@@ -33,7 +33,7 @@ function buildHorizontalBarChart(
           : v.toLocaleString('en-US', { maximumFractionDigits: 0 })
       ),
       textposition: 'outside',
-      textfont: { color: '#9CA3AF' },
+      textfont: { color: '#F5F5F5', weight: 600 },
     },
     {
       type: 'bar',

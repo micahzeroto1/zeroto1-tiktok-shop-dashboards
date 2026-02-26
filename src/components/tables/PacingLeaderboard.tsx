@@ -26,7 +26,7 @@ export default function PacingLeaderboard({ clients }: PacingLeaderboardProps) {
       marker: { color: colors },
       text: sorted.map((c) => `${(c.gmvPacing * 100).toFixed(0)}%`),
       textposition: 'outside',
-      textfont: { color: '#9CA3AF' },
+      textfont: { color: '#F5F5F5', weight: 600 },
     },
   ];
 

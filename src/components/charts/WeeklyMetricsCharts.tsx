@@ -48,7 +48,7 @@ export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsP
       marker: { color: weekColors(weeklyData, '#4A90D9', '#FCEB03') },
       text: videoActuals.map((v) => fmtNumber(v)),
       textposition: 'outside',
-      textfont: { color: '#9CA3AF' },
+      textfont: { color: '#F5F5F5', weight: 600 },
     },
     {
       type: 'scatter',
@@ -74,7 +74,7 @@ export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsP
       marker: { color: weekColors(weeklyData, '#4A90D9', '#FCEB03') },
       text: sampleActuals.map((v) => fmtNumber(v)),
       textposition: 'outside',
-      textfont: { color: '#9CA3AF' },
+      textfont: { color: '#F5F5F5', weight: 600 },
     },
     {
       type: 'scatter',
@@ -100,7 +100,7 @@ export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsP
       marker: { color: weekColors(weeklyData, '#4A90D9', '#FCEB03') },
       text: spendActuals.map((v) => fmtCurrency(v)),
       textposition: 'outside',
-      textfont: { color: '#9CA3AF' },
+      textfont: { color: '#F5F5F5', weight: 600 },
     },
     {
       type: 'scatter',

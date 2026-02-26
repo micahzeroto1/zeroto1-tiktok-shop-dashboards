@@ -41,7 +41,7 @@ export default function CreatorPipeline({ scorecard }: CreatorPipelineProps) {
         fmtNumber(samplesDecline),
       ],
       textposition: 'outside',
-      textfont: { color: '#9CA3AF' },
+      textfont: { color: '#F5F5F5', weight: 600 },
     },
   ];
 
@@ -61,7 +61,7 @@ export default function CreatorPipeline({ scorecard }: CreatorPipelineProps) {
       },
       text: funnelValues.map((v) => fmtNumber(v)),
       textposition: 'outside',
-      textfont: { color: '#9CA3AF' },
+      textfont: { color: '#F5F5F5', weight: 600 },
     },
   ];
 
