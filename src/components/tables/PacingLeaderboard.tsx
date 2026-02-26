@@ -1,6 +1,7 @@
 'use client';
 
 import PlotlyChart from '../charts/PlotlyChart';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import type { ClientMtdSummary } from '@/types/dashboard';
 import type { PlotlyData } from '@/types/plotly';
 
@@ -9,6 +10,7 @@ interface PacingLeaderboardProps {
 }
 
 export default function PacingLeaderboard({ clients }: PacingLeaderboardProps) {
+  const isMobile = useIsMobile();
   const sorted = [...clients].sort((a, b) => b.gmvPacing - a.gmvPacing);
 
   const colors = sorted.map((c) => {
@@ -26,7 +28,7 @@ export default function PacingLeaderboard({ clients }: PacingLeaderboardProps) {
       marker: { color: colors },
       text: sorted.map((c) => `${(c.gmvPacing * 100).toFixed(0)}%`),
       textposition: 'outside',
-      textfont: { color: '#F5F5F5', weight: 600 },
+      textfont: { color: '#F5F5F5', weight: 600, size: isMobile ? 10 : 12 },
     },
   ];
 
@@ -39,14 +41,14 @@ export default function PacingLeaderboard({ clients }: PacingLeaderboardProps) {
       <PlotlyChart
         data={data}
         layout={{
-          margin: { l: 120 },
+          margin: { l: isMobile ? 100 : 120 },
           xaxis: {
-            title: { text: 'GMV Pacing %' },
+            title: isMobile ? undefined : { text: 'GMV Pacing %' },
             range: [0, maxPacing],
             ticksuffix: '%',
           },
           showlegend: false,
-          height: Math.max(250, sorted.length * 50),
+          height: isMobile ? Math.max(200, sorted.length * 40) : Math.max(250, sorted.length * 50),
           shapes: [
             {
               type: 'line',

@@ -2,6 +2,7 @@
 
 import PlotlyChart from './PlotlyChart';
 import { buildWeekLabels, isCurrentWeek } from '@/lib/week-labels';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import type { WeeklyRollup } from '@/types/dashboard';
 import type { PlotlyData } from '@/types/plotly';
 
@@ -25,13 +26,15 @@ function weekColors(weeklyData: WeeklyRollup[], solidColor: string, dimColor: st
 }
 
 export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsProps) {
+  const isMobile = useIsMobile();
+
   if (weeklyData.length === 0) return null;
 
   const labels = buildWeekLabels(weeklyData);
   const lastIdx = weeklyData.length - 1;
   const lastIsCurrent = lastIdx >= 0 && isCurrentWeek(weeklyData[lastIdx]?.date || '');
   const displayLabels = labels.map((label, i) =>
-    i === lastIdx && lastIsCurrent ? `${label} (in progress)` : label
+    i === lastIdx && lastIsCurrent && !isMobile ? `${label} (in progress)` : label
   );
 
   // --- Videos Posted ---
@@ -48,7 +51,7 @@ export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsP
       marker: { color: weekColors(weeklyData, '#4A90D9', '#FCEB03') },
       text: videoActuals.map((v) => fmtNumber(v)),
       textposition: 'outside',
-      textfont: { color: '#F5F5F5', weight: 600 },
+      textfont: { color: '#F5F5F5', weight: 600, size: isMobile ? 10 : 12 },
     },
     {
       type: 'scatter',
@@ -74,7 +77,7 @@ export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsP
       marker: { color: weekColors(weeklyData, '#4A90D9', '#FCEB03') },
       text: sampleActuals.map((v) => fmtNumber(v)),
       textposition: 'outside',
-      textfont: { color: '#F5F5F5', weight: 600 },
+      textfont: { color: '#F5F5F5', weight: 600, size: isMobile ? 10 : 12 },
     },
     {
       type: 'scatter',
@@ -100,7 +103,7 @@ export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsP
       marker: { color: weekColors(weeklyData, '#4A90D9', '#FCEB03') },
       text: spendActuals.map((v) => fmtCurrency(v)),
       textposition: 'outside',
-      textfont: { color: '#F5F5F5', weight: 600 },
+      textfont: { color: '#F5F5F5', weight: 600, size: isMobile ? 10 : 12 },
     },
     {
       type: 'scatter',
@@ -112,7 +115,8 @@ export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsP
     },
   ];
 
-  const tickAngle = -30;
+  const tickAngle = isMobile ? 0 : -30;
+  const chartHeight = isMobile ? 250 : 340;
 
   return (
     <div className="space-y-6">
@@ -123,10 +127,10 @@ export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsP
             data={videoData}
             layout={{
               barmode: 'group',
-              xaxis: { title: { text: 'Week' }, tickangle: tickAngle },
+              xaxis: { title: isMobile ? undefined : { text: 'Week' }, tickangle: tickAngle },
               yaxis: { title: { text: 'Videos' }, tickformat: ',.0f' },
               legend: { orientation: 'h', y: -0.25 },
-              height: 340,
+              height: chartHeight,
             }}
           />
         </div>
@@ -139,10 +143,10 @@ export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsP
             data={sampleData}
             layout={{
               barmode: 'group',
-              xaxis: { title: { text: 'Week' }, tickangle: tickAngle },
+              xaxis: { title: isMobile ? undefined : { text: 'Week' }, tickangle: tickAngle },
               yaxis: { title: { text: 'Samples' }, tickformat: ',.0f' },
               legend: { orientation: 'h', y: -0.25 },
-              height: 340,
+              height: chartHeight,
             }}
           />
         </div>
@@ -155,14 +159,14 @@ export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsP
             data={spendData}
             layout={{
               barmode: 'group',
-              xaxis: { title: { text: 'Week' }, tickangle: tickAngle },
+              xaxis: { title: isMobile ? undefined : { text: 'Week' }, tickangle: tickAngle },
               yaxis: {
                 title: { text: 'Spend ($)' },
                 tickprefix: '$',
                 tickformat: ',.0f',
               },
               legend: { orientation: 'h', y: -0.25 },
-              height: 340,
+              height: chartHeight,
             }}
           />
         </div>

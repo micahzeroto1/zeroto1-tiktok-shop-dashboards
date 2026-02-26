@@ -1,6 +1,7 @@
 'use client';
 
 import PlotlyChart from './PlotlyChart';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import type { MtdScorecard } from '@/types/dashboard';
 import type { PlotlyData } from '@/types/plotly';
 
@@ -13,6 +14,7 @@ function fmtNumber(val: number): string {
 }
 
 export default function CreatorPipeline({ scorecard }: CreatorPipelineProps) {
+  const isMobile = useIsMobile();
   const {
     totalSamplesApproved,
     samplesDecline,
@@ -41,7 +43,7 @@ export default function CreatorPipeline({ scorecard }: CreatorPipelineProps) {
         fmtNumber(samplesDecline),
       ],
       textposition: 'outside',
-      textfont: { color: '#F5F5F5', weight: 600 },
+      textfont: { color: '#F5F5F5', weight: 600, size: isMobile ? 10 : 12 },
     },
   ];
 
@@ -61,7 +63,7 @@ export default function CreatorPipeline({ scorecard }: CreatorPipelineProps) {
       },
       text: funnelValues.map((v) => fmtNumber(v)),
       textposition: 'outside',
-      textfont: { color: '#F5F5F5', weight: 600 },
+      textfont: { color: '#F5F5F5', weight: 600, size: isMobile ? 10 : 12 },
     },
   ];
 
@@ -102,7 +104,7 @@ export default function CreatorPipeline({ scorecard }: CreatorPipelineProps) {
             layout={{
               showlegend: false,
               yaxis: { title: { text: 'Count' } },
-              height: 300,
+              height: isMobile ? 250 : 300,
             }}
           />
         </div>
@@ -115,7 +117,7 @@ export default function CreatorPipeline({ scorecard }: CreatorPipelineProps) {
               data={funnelData}
               layout={{
                 showlegend: false,
-                height: 300,
+                height: isMobile ? 250 : 300,
                 xaxis: { title: { text: 'Samples Approved' } },
               }}
             />
