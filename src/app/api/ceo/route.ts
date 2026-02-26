@@ -6,7 +6,7 @@ import { buildMtdScorecardFromRollup, buildMtdScorecard } from '@/lib/pacing';
 import { aggregatePod, aggregateCompany } from '@/lib/aggregation';
 import { config } from '@/config/pods';
 import { CACHE_REVALIDATE_SECONDS } from '@/config/constants';
-import type { ClientMtdSummary } from '@/types/dashboard';
+import type { ClientMtdSummary, WeeklyRollup } from '@/types/dashboard';
 
 export const revalidate = CACHE_REVALIDATE_SECONDS;
 
@@ -31,12 +31,17 @@ export async function GET(request: NextRequest) {
 
         const allData = await fetchSheetRanges(pod.spreadsheetId, ranges);
 
+        const allMonthlyRows: WeeklyRollup[] = [];
+
         const clients: ClientMtdSummary[] = pod.clients.map((clientConfig, i) => {
           const rawRows = allData[i * 2];
           const rollupRows = allData[i * 2 + 1];
 
           const daily = parseRawTab(rawRows);
           const { monthlyRows } = parseRollupTab(rollupRows);
+
+          // Collect monthly rows for YTD calculation
+          allMonthlyRows.push(...monthlyRows);
 
           const scorecard =
             buildMtdScorecardFromRollup(monthlyRows) ?? buildMtdScorecard(daily);
@@ -71,11 +76,25 @@ export async function GET(request: NextRequest) {
           };
         });
 
-        return aggregatePod(pod.slug, pod.displayName, clients);
+        return { pod: aggregatePod(pod.slug, pod.displayName, clients), monthlyRows: allMonthlyRows };
       });
 
-    const podSummaries = await Promise.all(podDataPromises);
-    const response = aggregateCompany(podSummaries);
+    const podResults = await Promise.all(podDataPromises);
+    const podSummaries = podResults.map((r) => r.pod);
+
+    // Compute YTD GMV: sum cumulativeMtdGmv from all monthly rows for current year
+    const MONTH_NAMES = [
+      'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
+      'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER',
+    ];
+    const currentMonthIdx = new Date().getMonth(); // 0-based
+    const validMonths = new Set(MONTH_NAMES.slice(0, currentMonthIdx + 1));
+    const allMonthlyRows = podResults.flatMap((r) => r.monthlyRows);
+    const ytdGmv = allMonthlyRows
+      .filter((row) => validMonths.has(row.weekLabel.toUpperCase()))
+      .reduce((sum, row) => sum + row.cumulativeMtdGmv, 0);
+
+    const response = aggregateCompany(podSummaries, ytdGmv);
 
     return NextResponse.json({
       ...response,

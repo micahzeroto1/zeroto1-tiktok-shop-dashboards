@@ -51,7 +51,7 @@ export function aggregatePod(
   };
 }
 
-export function aggregateCompany(pods: PodSummary[]): Omit<CeoApiResponse, 'lastUpdated'> {
+export function aggregateCompany(pods: PodSummary[], ytdGmv: number): Omit<CeoApiResponse, 'lastUpdated'> {
   const companyMtdGmv = pods.reduce((s, p) => s + p.totalMtdGmv, 0);
   const companyMtdTarget = pods.reduce((s, p) => s + p.totalMtdTarget, 0);
   const companyGmvPacing = companyMtdTarget > 0
@@ -61,14 +61,11 @@ export function aggregateCompany(pods: PodSummary[]): Omit<CeoApiResponse, 'last
   // Sum projected monthly GMV from all pods
   const projectedMonthlyGmv = pods.reduce((s, p) => s + p.projectedMonthlyGmv, 0);
 
-  // Project annual GMV from current month pace
+  // Pro-rated annual target based on days elapsed in the year
   const now = new Date();
-  const dayOfMonth = now.getDate();
-  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const monthlyProjection = dayOfMonth > 0
-    ? (companyMtdGmv / dayOfMonth) * daysInMonth
-    : 0;
-  const projectedAnnualGmv = monthlyProjection * 12;
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  const ytdTarget = (config.annualGmvTarget / 365) * dayOfYear;
 
   const allClients = pods.flatMap((p) => p.clients);
 
@@ -79,7 +76,8 @@ export function aggregateCompany(pods: PodSummary[]): Omit<CeoApiResponse, 'last
     companyGmvStatus: getPacingStatus(companyGmvPacing),
     projectedMonthlyGmv,
     annualTarget: config.annualGmvTarget,
-    projectedAnnualGmv,
+    ytdGmv,
+    ytdTarget,
     pods,
     allClients,
   };

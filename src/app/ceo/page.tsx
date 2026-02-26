@@ -64,11 +64,11 @@ export default function CeoDashboardPage() {
                   format="currency"
                 />
                 <KpiCard
-                  label="Projected Annual GMV"
-                  value={data.projectedAnnualGmv}
-                  target={data.annualTarget}
-                  pacing={data.projectedAnnualGmv / data.annualTarget}
-                  status={getPacingStatus(data.projectedAnnualGmv / data.annualTarget)}
+                  label="YTD GMV"
+                  value={data.ytdGmv}
+                  target={data.ytdTarget}
+                  pacing={data.ytdTarget > 0 ? data.ytdGmv / data.ytdTarget : 0}
+                  status={getPacingStatus(data.ytdTarget > 0 ? data.ytdGmv / data.ytdTarget : 0)}
                   format="currency"
                 />
                 <KpiCard

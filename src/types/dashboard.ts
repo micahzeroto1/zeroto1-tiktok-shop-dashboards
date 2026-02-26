@@ -205,7 +205,8 @@ export interface CeoApiResponse {
   companyGmvStatus: 'green' | 'yellow' | 'red';
   projectedMonthlyGmv: number;
   annualTarget: number;
-  projectedAnnualGmv: number;
+  ytdGmv: number;
+  ytdTarget: number;
   pods: PodSummary[];
   allClients: ClientMtdSummary[];
   lastUpdated: string;
