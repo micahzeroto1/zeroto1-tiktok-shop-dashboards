@@ -21,7 +21,7 @@ export default function WeeklyBarChart({ weeklyData }: WeeklyBarChartProps) {
   const lastIsCurrent = isCurrentWeek(weeklyData[lastIdx]?.date || '');
 
   const colors = gmvValues.map((_, i) =>
-    i === lastIdx && lastIsCurrent ? 'rgba(252, 235, 3, 0.35)' : '#FCEB03'
+    i === lastIdx && lastIsCurrent ? '#FCEB03' : '#4A90D9'
   );
 
   // Update label for current week

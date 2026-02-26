@@ -17,7 +17,7 @@ function fmtCurrency(val: number): string {
   return `$${val.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 }
 
-/** Build bar colors: yellow for completed weeks, dim yellow for in-progress */
+/** Build bar colors: blue for completed weeks, yellow accent for in-progress */
 function weekColors(weeklyData: WeeklyRollup[], solidColor: string, dimColor: string): string[] {
   const lastIdx = weeklyData.length - 1;
   const lastIsCurrent = lastIdx >= 0 && isCurrentWeek(weeklyData[lastIdx]?.date || '');
@@ -45,7 +45,7 @@ export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsP
       x: displayLabels,
       y: videoActuals,
       name: 'Videos Posted',
-      marker: { color: weekColors(weeklyData, '#FCEB03', 'rgba(252, 235, 3, 0.35)') },
+      marker: { color: weekColors(weeklyData, '#4A90D9', '#FCEB03') },
       text: videoActuals.map((v) => fmtNumber(v)),
       textposition: 'outside',
       textfont: { color: '#9CA3AF' },
@@ -71,7 +71,7 @@ export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsP
       x: displayLabels,
       y: sampleActuals,
       name: 'Samples Approved',
-      marker: { color: weekColors(weeklyData, '#FCEB03', 'rgba(252, 235, 3, 0.35)') },
+      marker: { color: weekColors(weeklyData, '#4A90D9', '#FCEB03') },
       text: sampleActuals.map((v) => fmtNumber(v)),
       textposition: 'outside',
       textfont: { color: '#9CA3AF' },
@@ -97,7 +97,7 @@ export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsP
       x: displayLabels,
       y: spendActuals,
       name: 'Ad Spend',
-      marker: { color: weekColors(weeklyData, '#FCEB03', 'rgba(252, 235, 3, 0.35)') },
+      marker: { color: weekColors(weeklyData, '#4A90D9', '#FCEB03') },
       text: spendActuals.map((v) => fmtCurrency(v)),
       textposition: 'outside',
       textfont: { color: '#9CA3AF' },

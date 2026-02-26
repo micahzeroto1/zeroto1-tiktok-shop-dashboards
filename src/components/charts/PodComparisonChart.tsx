@@ -63,7 +63,7 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
     pods.map((p) => p.totalMtdTarget),
     'MTD GMV',
     'Target',
-    '#FCEB03',
+    '#4A90D9',
     true,
   );
 
@@ -74,7 +74,7 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
     pods.map((p) => p.totalVideoTarget),
     'Videos Posted',
     'Target',
-    '#FCEB03',
+    '#4A90D9',
     false,
   );
 
@@ -85,7 +85,7 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
     pods.map((p) => p.totalSamplesTarget),
     'Samples Approved',
     'Target',
-    '#FCEB03',
+    '#4A90D9',
     false,
   );
 
@@ -96,7 +96,7 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
     pods.map((p) => p.totalSpendTarget),
     'Ad Spend',
     'Target',
-    '#FCEB03',
+    '#4A90D9',
     true,
   );
 
@@ -188,7 +188,7 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
                 x: pods.map((p) => p.totalSamplesApproved),
                 name: 'Approved',
                 orientation: 'h',
-                marker: { color: '#22C55E' },
+                marker: { color: '#4ADE80' },
               },
               {
                 type: 'bar',
@@ -196,7 +196,7 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
                 x: pods.map((p) => p.totalSamplesDecline),
                 name: 'Declined',
                 orientation: 'h',
-                marker: { color: '#EF4444' },
+                marker: { color: '#F87171' },
               },
             ] as PlotlyData[]}
             layout={{

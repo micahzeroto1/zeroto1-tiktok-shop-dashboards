@@ -34,7 +34,7 @@ export default function CreatorPipeline({ scorecard }: CreatorPipelineProps) {
       x: ['Approved', 'Declined'],
       y: [totalSamplesApproved, samplesDecline],
       marker: {
-        color: ['#22C55E', '#EF4444'],
+        color: ['#4ADE80', '#F87171'],
       },
       text: [
         fmtNumber(totalSamplesApproved),
@@ -57,7 +57,7 @@ export default function CreatorPipeline({ scorecard }: CreatorPipelineProps) {
       x: funnelValues,
       orientation: 'h',
       marker: {
-        color: ['#FCEB03', '#E5D403', '#CCC003', '#B3AA03', '#999503', '#807F03', '#666A03'],
+        color: ['#93C5FD', '#7CB3F0', '#64A1E3', '#4D8FD6', '#3B7DC9', '#2E6FBC', '#2563EB'],
       },
       text: funnelValues.map((v) => fmtNumber(v)),
       textposition: 'outside',

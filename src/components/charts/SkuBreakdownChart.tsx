@@ -19,14 +19,14 @@ export default function SkuBreakdownChart({ skuData }: SkuBreakdownChartProps) {
       x: activeSkus.map((s) => s.name),
       y: activeSkus.map((s) => s.samplesApproved),
       name: 'Samples Approved',
-      marker: { color: '#22C55E' },
+      marker: { color: '#4ADE80' },
     },
     {
       type: 'bar',
       x: activeSkus.map((s) => s.name),
       y: activeSkus.map((s) => s.sampleRequests),
       name: 'Sample Requests',
-      marker: { color: '#FCEB03' },
+      marker: { color: '#4A90D9' },
     },
   ];
 

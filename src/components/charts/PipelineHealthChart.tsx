@@ -18,7 +18,7 @@ export default function PipelineHealthChart({ clients }: PipelineHealthChartProp
   if (!hasData) return null;
 
   const clientNames = clients.map((c) => c.clientName);
-  const colors = ['#FCEB03', '#E5D403', '#CCC003', '#B3AA03', '#999503', '#807F03', '#666A03'];
+  const colors = ['#93C5FD', '#7CB3F0', '#64A1E3', '#4D8FD6', '#3B7DC9', '#2E6FBC', '#2563EB'];
   const levels = ['L0', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6'];
   const getters: ((c: ClientMtdSummary) => number)[] = [
     (c) => c.l0Approved,
@@ -50,14 +50,14 @@ export default function PipelineHealthChart({ clients }: PipelineHealthChartProp
           name: 'Approved',
           x: clientNames,
           y: clients.map((c) => c.totalSamplesApproved),
-          marker: { color: '#22C55E' },
+          marker: { color: '#4ADE80' },
         },
         {
           type: 'bar',
           name: 'Declined',
           x: clientNames,
           y: clients.map((c) => c.samplesDecline),
-          marker: { color: '#EF4444' },
+          marker: { color: '#F87171' },
         },
       ]
     : [];
