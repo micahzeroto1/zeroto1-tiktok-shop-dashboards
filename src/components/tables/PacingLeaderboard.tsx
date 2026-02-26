@@ -39,6 +39,7 @@ export default function PacingLeaderboard({ clients }: PacingLeaderboardProps) {
       <PlotlyChart
         data={data}
         layout={{
+          margin: { l: 120 },
           xaxis: {
             title: { text: 'GMV Pacing %' },
             range: [0, maxPacing],

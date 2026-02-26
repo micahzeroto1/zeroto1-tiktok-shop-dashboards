@@ -20,8 +20,10 @@ interface PlotlyChartProps {
 function darkAxis(axis: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     gridcolor: '#1E1E1E',
+    linecolor: '#1E1E1E',
     zerolinecolor: '#1E1E1E',
     tickfont: { color: '#9CA3AF' },
+    tickcolor: '#9CA3AF',
     ...axis,
     title: axis.title
       ? { ...(typeof axis.title === 'object' ? axis.title : { text: axis.title }), font: { color: '#9CA3AF' } }
@@ -43,11 +45,16 @@ export default function PlotlyChart({ data, layout, className }: PlotlyChartProp
     yaxis: darkAxis((layout?.yaxis || {}) as any) as any,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     yaxis2: layout?.yaxis2 ? darkAxis((layout.yaxis2 || {}) as any) as any : undefined,
-    legend: { font: { color: '#9CA3AF' }, ...(layout?.legend || {}) },
+    legend: { font: { color: '#FFFFFF' }, ...(layout?.legend || {}) },
   };
 
+  // Extract height from layout so the wrapper div has a defined size.
+  // Without this, the Plot's style={{ height: '100%' }} has no reference
+  // height and Plotly collapses to zero.
+  const chartHeight = (merged.height as number) || 300;
+
   return (
-    <div className={className}>
+    <div className={className} style={{ minHeight: chartHeight }}>
       <Plot
         data={data}
         layout={merged}
