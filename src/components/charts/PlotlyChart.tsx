@@ -3,12 +3,23 @@
 import dynamic from 'next/dynamic';
 import type { PlotlyData, PlotlyLayout } from '@/types/plotly';
 
-const Plot = dynamic(() => import('react-plotly.js'), {
-  ssr: false,
-  loading: () => (
-    <div className="h-64 bg-zt-card animate-pulse rounded-lg" />
-  ),
-});
+// Use factory pattern to explicitly pass our plotly.js-basic-dist-min bundle.
+// The default `import('react-plotly.js')` internally requires `plotly.js/dist/plotly`
+// which may not resolve correctly through webpack aliases in Next.js dynamic imports.
+// The factory pattern bypasses this by directly importing the bundle we want.
+const Plot = dynamic(
+  async () => {
+    const Plotly = await import('plotly.js-basic-dist-min');
+    const createPlotlyComponent = (await import('react-plotly.js/factory')).default;
+    return createPlotlyComponent(Plotly.default || Plotly);
+  },
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-64 bg-zt-card animate-pulse rounded-lg" />
+    ),
+  },
+);
 
 interface PlotlyChartProps {
   data: PlotlyData[];
@@ -50,8 +61,6 @@ export default function PlotlyChart({ data, layout, className }: PlotlyChartProp
   };
 
   // Use explicit pixel height from layout (every chart passes one).
-  // CSS `height: 100%` fails when the parent only has `minHeight`,
-  // so we pass the pixel value directly to the Plot container.
   const chartHeight = (layout?.height as number) || 300;
 
   return (
