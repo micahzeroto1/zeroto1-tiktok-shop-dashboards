@@ -32,8 +32,9 @@ function darkAxis(axis: Record<string, unknown> = {}): Record<string, unknown> {
 }
 
 export default function PlotlyChart({ data, layout, className }: PlotlyChartProps) {
+  // Merge caller layout with dark theme defaults.
+  // Spread order: defaults first, then caller overrides, then dark axis overrides.
   const merged: Partial<PlotlyLayout> = {
-    autosize: true,
     margin: { t: 40, r: 30, b: 50, l: 60 },
     paper_bgcolor: 'transparent',
     plot_bgcolor: 'transparent',
@@ -48,18 +49,18 @@ export default function PlotlyChart({ data, layout, className }: PlotlyChartProp
     legend: { font: { color: '#FFFFFF' }, ...(layout?.legend || {}) },
   };
 
-  // Extract height from layout so the wrapper div has a defined size.
-  // Without this, the Plot's style={{ height: '100%' }} has no reference
-  // height and Plotly collapses to zero.
-  const chartHeight = (merged.height as number) || 300;
+  // Use explicit pixel height from layout (every chart passes one).
+  // CSS `height: 100%` fails when the parent only has `minHeight`,
+  // so we pass the pixel value directly to the Plot container.
+  const chartHeight = (layout?.height as number) || 300;
 
   return (
-    <div className={className} style={{ minHeight: chartHeight }}>
+    <div className={className}>
       <Plot
         data={data}
         layout={merged}
         useResizeHandler
-        style={{ width: '100%', height: '100%' }}
+        style={{ width: '100%', height: chartHeight }}
         config={{ displayModeBar: false, responsive: true }}
       />
     </div>
