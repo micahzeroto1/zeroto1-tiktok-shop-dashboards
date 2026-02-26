@@ -57,7 +57,9 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
 
   const podNames = pods.map((p) => isMobile ? p.podName.replace(/'s Pod$/i, '') : p.podName);
   const chartHeight = Math.max(300, pods.length * 80 + 100);
-  const leftMargin = 120;
+  const chartMargin = isMobile
+    ? { l: 80, r: 20, t: 40, b: 40 }
+    : { l: 120 };
 
   // GMV
   const gmv = buildHorizontalBarChart(
@@ -107,77 +109,85 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
     isMobile,
   );
 
+  const axisStyle = { gridcolor: '#222222', linecolor: '#1E1E1E', zerolinecolor: '#1E1E1E' };
+  const legendStyle = { orientation: 'h' as const, y: 1.15, x: 0, font: { size: 11 } };
+  const cardClass = `bg-zt-card rounded-xl border border-zt-border ${isMobile ? 'p-2' : 'p-6'}`;
+
   return (
     <div className="space-y-6">
-      <div className="bg-zt-card rounded-xl border border-zt-border p-6">
+      <div className={cardClass}>
         <h3 className="text-lg font-semibold text-white mb-4">Pod GMV Comparison</h3>
         <PlotlyChart
           data={gmv.data}
           layout={{
             barmode: 'group',
             bargap: 0.3,
-            margin: { l: leftMargin },
+            margin: chartMargin,
             xaxis: {
+              ...axisStyle,
               tickprefix: '$',
               tickformat: ',.0f',
               range: [0, gmv.maxVal * 1.15],
             },
-            legend: { orientation: 'h', y: 1.15, x: 0, font: { size: 11 } },
+            legend: legendStyle,
             height: chartHeight,
           }}
         />
       </div>
 
-      <div className="bg-zt-card rounded-xl border border-zt-border p-6">
+      <div className={cardClass}>
         <h3 className="text-lg font-semibold text-white mb-4">Pod Videos Comparison</h3>
         <PlotlyChart
           data={videos.data}
           layout={{
             barmode: 'group',
             bargap: 0.3,
-            margin: { l: leftMargin },
+            margin: chartMargin,
             xaxis: {
+              ...axisStyle,
               tickformat: ',.0f',
               range: [0, videos.maxVal * 1.15],
             },
-            legend: { orientation: 'h', y: 1.15, x: 0, font: { size: 11 } },
+            legend: legendStyle,
             height: chartHeight,
           }}
         />
       </div>
 
-      <div className="bg-zt-card rounded-xl border border-zt-border p-6">
+      <div className={cardClass}>
         <h3 className="text-lg font-semibold text-white mb-4">Pod Samples Comparison</h3>
         <PlotlyChart
           data={samples.data}
           layout={{
             barmode: 'group',
             bargap: 0.3,
-            margin: { l: leftMargin },
+            margin: chartMargin,
             xaxis: {
+              ...axisStyle,
               tickformat: ',.0f',
               range: [0, samples.maxVal * 1.15],
             },
-            legend: { orientation: 'h', y: 1.15, x: 0, font: { size: 11 } },
+            legend: legendStyle,
             height: chartHeight,
           }}
         />
       </div>
 
-      <div className="bg-zt-card rounded-xl border border-zt-border p-6">
+      <div className={cardClass}>
         <h3 className="text-lg font-semibold text-white mb-4">Pod Ad Spend Comparison</h3>
         <PlotlyChart
           data={spend.data}
           layout={{
             barmode: 'group',
             bargap: 0.3,
-            margin: { l: leftMargin },
+            margin: chartMargin,
             xaxis: {
+              ...axisStyle,
               tickprefix: '$',
               tickformat: ',.0f',
               range: [0, spend.maxVal * 1.15],
             },
-            legend: { orientation: 'h', y: 1.15, x: 0, font: { size: 11 } },
+            legend: legendStyle,
             height: chartHeight,
           }}
         />
@@ -185,7 +195,7 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
 
       {/* Pipeline Comparison */}
       {pods.some((p) => p.totalSamplesApproved > 0 || p.totalSamplesDecline > 0) && (
-        <div className="bg-zt-card rounded-xl border border-zt-border p-6">
+        <div className={cardClass}>
           <h3 className="text-lg font-semibold text-white mb-4">Pod Pipeline Comparison</h3>
           <PlotlyChart
             data={[
@@ -209,11 +219,12 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
             layout={{
               barmode: 'group',
               bargap: 0.3,
-              margin: { l: leftMargin },
+              margin: chartMargin,
               xaxis: {
+                ...axisStyle,
                 tickformat: ',.0f',
               },
-              legend: { orientation: 'h', y: 1.15, x: 0, font: { size: 11 } },
+              legend: legendStyle,
               height: chartHeight,
             }}
           />
