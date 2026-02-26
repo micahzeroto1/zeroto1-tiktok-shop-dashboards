@@ -55,10 +55,9 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
 
   if (pods.length === 0) return null;
 
-  // Use full pod names for labels — increase left margin to fit
-  const podNames = pods.map((p) => p.podName);
-  const chartHeight = isMobile ? Math.max(200, pods.length * 60) : Math.max(250, pods.length * 80);
-  const leftMargin = isMobile ? 100 : 120;
+  const podNames = pods.map((p) => isMobile ? p.podName.replace(/'s Pod$/i, '') : p.podName);
+  const chartHeight = Math.max(300, pods.length * 80 + 100);
+  const leftMargin = 120;
 
   // GMV
   const gmv = buildHorizontalBarChart(
@@ -116,14 +115,14 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
           data={gmv.data}
           layout={{
             barmode: 'group',
+            bargap: 0.3,
             margin: { l: leftMargin },
             xaxis: {
-              title: isMobile ? undefined : { text: 'GMV ($)' },
               tickprefix: '$',
               tickformat: ',.0f',
               range: [0, gmv.maxVal * 1.15],
             },
-            legend: { orientation: 'h', y: isMobile ? 1.15 : -0.15 },
+            legend: { orientation: 'h', y: 1.15, x: 0, font: { size: 11 } },
             height: chartHeight,
           }}
         />
@@ -135,13 +134,13 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
           data={videos.data}
           layout={{
             barmode: 'group',
+            bargap: 0.3,
             margin: { l: leftMargin },
             xaxis: {
-              title: isMobile ? undefined : { text: 'Videos Posted' },
               tickformat: ',.0f',
               range: [0, videos.maxVal * 1.15],
             },
-            legend: { orientation: 'h', y: isMobile ? 1.15 : -0.15 },
+            legend: { orientation: 'h', y: 1.15, x: 0, font: { size: 11 } },
             height: chartHeight,
           }}
         />
@@ -153,13 +152,13 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
           data={samples.data}
           layout={{
             barmode: 'group',
+            bargap: 0.3,
             margin: { l: leftMargin },
             xaxis: {
-              title: isMobile ? undefined : { text: 'Samples Approved' },
               tickformat: ',.0f',
               range: [0, samples.maxVal * 1.15],
             },
-            legend: { orientation: 'h', y: isMobile ? 1.15 : -0.15 },
+            legend: { orientation: 'h', y: 1.15, x: 0, font: { size: 11 } },
             height: chartHeight,
           }}
         />
@@ -171,14 +170,14 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
           data={spend.data}
           layout={{
             barmode: 'group',
+            bargap: 0.3,
             margin: { l: leftMargin },
             xaxis: {
-              title: isMobile ? undefined : { text: 'Ad Spend ($)' },
               tickprefix: '$',
               tickformat: ',.0f',
               range: [0, spend.maxVal * 1.15],
             },
-            legend: { orientation: 'h', y: isMobile ? 1.15 : -0.15 },
+            legend: { orientation: 'h', y: 1.15, x: 0, font: { size: 11 } },
             height: chartHeight,
           }}
         />
@@ -209,12 +208,12 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
             ] as PlotlyData[]}
             layout={{
               barmode: 'group',
+              bargap: 0.3,
               margin: { l: leftMargin },
               xaxis: {
-                title: isMobile ? undefined : { text: 'Count' },
                 tickformat: ',.0f',
               },
-              legend: { orientation: 'h', y: isMobile ? 1.15 : -0.15 },
+              legend: { orientation: 'h', y: 1.15, x: 0, font: { size: 11 } },
               height: chartHeight,
             }}
           />
