@@ -34,17 +34,18 @@ export default function CreatorPipeline({ scorecard }: CreatorPipelineProps) {
       x: ['Approved', 'Declined'],
       y: [totalSamplesApproved, samplesDecline],
       marker: {
-        color: ['#10b981', '#ef4444'],
+        color: ['#22C55E', '#EF4444'],
       },
       text: [
         fmtNumber(totalSamplesApproved),
         fmtNumber(samplesDecline),
       ],
       textposition: 'outside',
+      textfont: { color: '#9CA3AF' },
     },
   ];
 
-  // L0-L6 horizontal bar chart (funnel-style)
+  // L0-L6 horizontal bar chart
   const funnelLevels = ['L6', 'L5', 'L4', 'L3', 'L2', 'L1', 'L0'];
   const funnelValues = [l6Approved, l5Approved, l4Approved, l3Approved, l2Approved, l1Approved, l0Approved];
   const hasLevelData = [l0Approved, l1Approved, l2Approved, l3Approved, l4Approved, l5Approved, l6Approved].some((v) => v > 0);
@@ -56,14 +57,15 @@ export default function CreatorPipeline({ scorecard }: CreatorPipelineProps) {
       x: funnelValues,
       orientation: 'h',
       marker: {
-        color: ['#e9d5ff', '#d8b4fe', '#c084fc', '#a855f7', '#8b5cf6', '#6366f1', '#3b82f6'],
+        color: ['#FCEB03', '#E5D403', '#CCC003', '#B3AA03', '#999503', '#807F03', '#666A03'],
       },
       text: funnelValues.map((v) => fmtNumber(v)),
       textposition: 'outside',
+      textfont: { color: '#9CA3AF' },
     },
   ];
 
-  // Pipeline KPI cards (only reliable metrics)
+  // Pipeline KPI cards
   const pipelineKpis = [
     { label: 'Invites Sent', value: targetInvitesSent },
     { label: 'Spark Codes', value: sparkCodesAcquired },
@@ -76,25 +78,25 @@ export default function CreatorPipeline({ scorecard }: CreatorPipelineProps) {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold text-navy-900">Creator Pipeline</h2>
+      <h2 className="text-xl font-bold text-white">Creator Pipeline</h2>
 
       {/* Pipeline KPI row */}
       <div className="grid grid-cols-2 gap-3">
         {pipelineKpis.map((kpi) => (
           <div
             key={kpi.label}
-            className="bg-white rounded-lg border border-slate-200 p-3 text-center"
+            className="bg-zt-card rounded-lg border border-zt-border p-3 text-center"
           >
-            <div className="text-xs font-medium text-slate-500 mb-1">{kpi.label}</div>
-            <div className="text-xl font-bold text-navy-900">{fmtNumber(kpi.value)}</div>
+            <div className="text-xs font-medium text-gray-500 mb-1">{kpi.label}</div>
+            <div className="text-xl font-bold text-white">{fmtNumber(kpi.value)}</div>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Samples Approved vs Declined */}
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h3 className="text-lg font-semibold text-navy-900 mb-4">Samples Approved vs Declined</h3>
+        <div className="bg-zt-card rounded-xl border border-zt-border p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Samples Approved vs Declined</h3>
           <PlotlyChart
             data={sampleBarData}
             layout={{
@@ -107,8 +109,8 @@ export default function CreatorPipeline({ scorecard }: CreatorPipelineProps) {
 
         {/* L0-L6 Funnel */}
         {hasLevelData && (
-          <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="text-lg font-semibold text-navy-900 mb-4">Sample Approval Funnel (L0–L6)</h3>
+          <div className="bg-zt-card rounded-xl border border-zt-border p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Sample Approval Funnel (L0–L6)</h3>
             <PlotlyChart
               data={funnelData}
               layout={{

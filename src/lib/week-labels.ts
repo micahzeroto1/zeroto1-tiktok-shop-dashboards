@@ -66,6 +66,20 @@ export function buildWeekLabels(weeks: WeeklyRollup[]): string[] {
   });
 }
 
+/**
+ * Check if a date string falls in the current week (i.e., the week ending
+ * on or after today).  Used to tag the last bar as "in progress".
+ */
+export function isCurrentWeek(dateStr: string): boolean {
+  const d = parseDate(dateStr);
+  if (!d) return false;
+  const now = new Date();
+  // week-end date is on or after today, and within 7 days before today
+  const diffMs = d.getTime() - now.getTime();
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+  return diffDays >= -7 && diffDays <= 7;
+}
+
 /** Time filter periods */
 export type TimePeriod = 'current_month' | 'last_month' | 'last_90_days' | 'ytd';
 

@@ -19,20 +19,20 @@ export default function SkuBreakdownChart({ skuData }: SkuBreakdownChartProps) {
       x: activeSkus.map((s) => s.name),
       y: activeSkus.map((s) => s.samplesApproved),
       name: 'Samples Approved',
-      marker: { color: '#10b981' },
+      marker: { color: '#22C55E' },
     },
     {
       type: 'bar',
       x: activeSkus.map((s) => s.name),
       y: activeSkus.map((s) => s.sampleRequests),
       name: 'Sample Requests',
-      marker: { color: '#6366f1' },
+      marker: { color: '#FCEB03' },
     },
   ];
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-6">
-      <h3 className="text-lg font-semibold text-navy-900 mb-4">SKU Breakdown</h3>
+    <div className="bg-zt-card rounded-xl border border-zt-border p-6">
+      <h3 className="text-lg font-semibold text-white mb-4">SKU Breakdown</h3>
       <PlotlyChart
         data={data}
         layout={{

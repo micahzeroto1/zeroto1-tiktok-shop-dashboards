@@ -27,7 +27,7 @@ function ClientDashboardContent({ data }: { data: ClientApiResponse }) {
     >
       {/* MTD Scorecard — always current month */}
       <section className="mb-8">
-        <h2 className="text-xl font-bold text-navy-900 mb-4">Month-to-Date Scorecard</h2>
+        <h2 className="text-xl font-bold text-white mb-4">Month-to-Date Scorecard</h2>
         <ScoreCardGrid scorecard={data.mtdScorecard} />
       </section>
 

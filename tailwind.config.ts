@@ -9,15 +9,27 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        navy: {
-          900: '#0f172a',
-          800: '#1e293b',
-          700: '#334155',
+        zt: {
+          bg: '#0A0A0A',
+          card: '#141414',
+          border: '#1E1E1E',
+          'table-header': '#1A1A1A',
+          'table-alt': '#111111',
+          'table-hover': '#1A1A1A',
+          yellow: '#FCEB03',
         },
-        accent: {
-          green: '#10b981',
-          yellow: '#f59e0b',
-          red: '#ef4444',
+        navy: {
+          900: '#0A0A0A',
+          800: '#141414',
+          700: '#1E1E1E',
+        },
+        pacing: {
+          'green-text': '#22C55E',
+          'green-bg': '#0D3320',
+          'yellow-text': '#EAB308',
+          'yellow-bg': '#332B00',
+          'red-text': '#EF4444',
+          'red-bg': '#331111',
         },
       },
     },

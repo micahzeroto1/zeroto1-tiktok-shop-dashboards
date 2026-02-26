@@ -1,7 +1,7 @@
 'use client';
 
 import PlotlyChart from './PlotlyChart';
-import { buildWeekLabels } from '@/lib/week-labels';
+import { buildWeekLabels, isCurrentWeek } from '@/lib/week-labels';
 import type { WeeklyRollup } from '@/types/dashboard';
 import type { PlotlyData } from '@/types/plotly';
 
@@ -17,10 +17,22 @@ function fmtCurrency(val: number): string {
   return `$${val.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 }
 
+/** Build bar colors: yellow for completed weeks, dim yellow for in-progress */
+function weekColors(weeklyData: WeeklyRollup[], solidColor: string, dimColor: string): string[] {
+  const lastIdx = weeklyData.length - 1;
+  const lastIsCurrent = lastIdx >= 0 && isCurrentWeek(weeklyData[lastIdx]?.date || '');
+  return weeklyData.map((_, i) => (i === lastIdx && lastIsCurrent ? dimColor : solidColor));
+}
+
 export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsProps) {
   if (weeklyData.length === 0) return null;
 
   const labels = buildWeekLabels(weeklyData);
+  const lastIdx = weeklyData.length - 1;
+  const lastIsCurrent = lastIdx >= 0 && isCurrentWeek(weeklyData[lastIdx]?.date || '');
+  const displayLabels = labels.map((label, i) =>
+    i === lastIdx && lastIsCurrent ? `${label} (in progress)` : label
+  );
 
   // --- Videos Posted ---
   const videoActuals = weeklyData.map((w) => w.videosPosted);
@@ -30,20 +42,21 @@ export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsP
   const videoData: PlotlyData[] = [
     {
       type: 'bar',
-      x: labels,
+      x: displayLabels,
       y: videoActuals,
       name: 'Videos Posted',
-      marker: { color: 'rgba(59, 130, 246, 0.85)' },
+      marker: { color: weekColors(weeklyData, '#FCEB03', 'rgba(252, 235, 3, 0.35)') },
       text: videoActuals.map((v) => fmtNumber(v)),
       textposition: 'outside',
+      textfont: { color: '#9CA3AF' },
     },
     {
       type: 'scatter',
-      x: labels,
+      x: displayLabels,
       y: videoTargets,
       name: 'Target',
       mode: 'lines',
-      line: { color: '#ef4444', width: 2, dash: 'dash' },
+      line: { color: '#9CA3AF', width: 2, dash: 'dash' },
     },
   ];
 
@@ -55,20 +68,21 @@ export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsP
   const sampleData: PlotlyData[] = [
     {
       type: 'bar',
-      x: labels,
+      x: displayLabels,
       y: sampleActuals,
       name: 'Samples Approved',
-      marker: { color: 'rgba(168, 85, 247, 0.85)' },
+      marker: { color: weekColors(weeklyData, '#FCEB03', 'rgba(252, 235, 3, 0.35)') },
       text: sampleActuals.map((v) => fmtNumber(v)),
       textposition: 'outside',
+      textfont: { color: '#9CA3AF' },
     },
     {
       type: 'scatter',
-      x: labels,
+      x: displayLabels,
       y: sampleTargets,
       name: 'Target',
       mode: 'lines',
-      line: { color: '#ef4444', width: 2, dash: 'dash' },
+      line: { color: '#9CA3AF', width: 2, dash: 'dash' },
     },
   ];
 
@@ -80,20 +94,21 @@ export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsP
   const spendData: PlotlyData[] = [
     {
       type: 'bar',
-      x: labels,
+      x: displayLabels,
       y: spendActuals,
       name: 'Ad Spend',
-      marker: { color: 'rgba(245, 158, 11, 0.85)' },
+      marker: { color: weekColors(weeklyData, '#FCEB03', 'rgba(252, 235, 3, 0.35)') },
       text: spendActuals.map((v) => fmtCurrency(v)),
       textposition: 'outside',
+      textfont: { color: '#9CA3AF' },
     },
     {
       type: 'scatter',
-      x: labels,
+      x: displayLabels,
       y: spendTargets,
       name: 'Target',
       mode: 'lines',
-      line: { color: '#ef4444', width: 2, dash: 'dash' },
+      line: { color: '#9CA3AF', width: 2, dash: 'dash' },
     },
   ];
 
@@ -102,8 +117,8 @@ export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsP
   return (
     <div className="space-y-6">
       {hasVideoData && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h3 className="text-lg font-semibold text-navy-900 mb-4">Weekly Videos Posted</h3>
+        <div className="bg-zt-card rounded-xl border border-zt-border p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Weekly Videos Posted</h3>
           <PlotlyChart
             data={videoData}
             layout={{
@@ -118,8 +133,8 @@ export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsP
       )}
 
       {hasSampleData && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h3 className="text-lg font-semibold text-navy-900 mb-4">Weekly Samples Approved</h3>
+        <div className="bg-zt-card rounded-xl border border-zt-border p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Weekly Samples Approved</h3>
           <PlotlyChart
             data={sampleData}
             layout={{
@@ -134,8 +149,8 @@ export default function WeeklyMetricsCharts({ weeklyData }: WeeklyMetricsChartsP
       )}
 
       {hasSpendData && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h3 className="text-lg font-semibold text-navy-900 mb-4">Weekly Ad Spend</h3>
+        <div className="bg-zt-card rounded-xl border border-zt-border p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Weekly Ad Spend</h3>
           <PlotlyChart
             data={spendData}
             layout={{

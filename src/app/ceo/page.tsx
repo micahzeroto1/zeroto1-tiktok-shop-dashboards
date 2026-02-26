@@ -25,7 +25,6 @@ export default function CeoDashboardPage() {
       {(data: CeoApiResponse) => {
         const monthlyTarget = data.annualTarget / 12;
 
-        // Data health: count clients with targets set
         const allClients = data.allClients;
         const total = allClients.length;
         const gmvReporting = allClients.filter((c) => c.gmvTargetMonth > 0).length;
@@ -33,6 +32,10 @@ export default function CeoDashboardPage() {
         function companyWarning(reporting: number): string | undefined {
           return reporting < total ? `${reporting} of ${total} clients reporting` : undefined;
         }
+
+        const pacingColor = (status: string) =>
+          status === 'green' ? 'text-pacing-green-text' :
+          status === 'yellow' ? 'text-pacing-yellow-text' : 'text-pacing-red-text';
 
         return (
           <DashboardShell
@@ -42,7 +45,7 @@ export default function CeoDashboardPage() {
           >
             {/* Company Totals */}
             <section className="mb-8">
-              <h2 className="text-xl font-bold text-navy-900 mb-4">Company Overview</h2>
+              <h2 className="text-xl font-bold text-white mb-4">Company Overview</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <KpiCard
                   label="MTD GMV (All Pods)"
@@ -84,7 +87,7 @@ export default function CeoDashboardPage() {
 
             {/* Pod Scorecards */}
             <section className="mb-8">
-              <h2 className="text-xl font-bold text-navy-900 mb-4">Pod Breakdown</h2>
+              <h2 className="text-xl font-bold text-white mb-4">Pod Breakdown</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {data.pods.map((pod) => {
                   const podTotal = pod.clients.length;
@@ -100,81 +103,78 @@ export default function CeoDashboardPage() {
                   return (
                     <div
                       key={pod.podSlug}
-                      className="bg-white rounded-xl border border-slate-200 p-5"
+                      className="bg-zt-card rounded-xl border border-zt-border p-5"
                     >
-                      <h4 className="font-semibold text-navy-900 text-lg mb-3">{pod.podName}</h4>
+                      <h4 className="font-semibold text-white text-lg mb-3">{pod.podName}</h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-slate-500">MTD GMV</span>
-                          <span className="font-medium">
+                          <span className="text-gray-500">MTD GMV</span>
+                          <span className="font-medium text-gray-300">
                             {fmtCurrency(pod.totalMtdGmv)} / {fmtCurrency(pod.totalMtdTarget)}
                             {podGmvR < podTotal && (
-                              <span className="text-amber-600 text-xs ml-1" title={`${podGmvR} of ${podTotal} clients have GMV targets`}>⚠</span>
+                              <span className="text-pacing-yellow-text text-xs ml-1" title={`${podGmvR} of ${podTotal} clients have GMV targets`}>⚠</span>
                             )}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-500">Pacing</span>
-                          <span className={`font-bold ${
-                            pod.gmvStatus === 'green' ? 'text-emerald-600' :
-                            pod.gmvStatus === 'yellow' ? 'text-amber-600' : 'text-rose-600'
-                          }`}>
+                          <span className="text-gray-500">Pacing</span>
+                          <span className={`font-bold ${pacingColor(pod.gmvStatus)}`}>
                             {(pod.gmvPacing * 100).toFixed(0)}%
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-500">Videos Posted</span>
-                          <span>
+                          <span className="text-gray-500">Videos Posted</span>
+                          <span className="text-gray-300">
                             {pod.totalVideosPosted.toLocaleString('en-US')} / {pod.totalVideoTarget.toLocaleString('en-US')}
                             {podVideoR < podTotal && (
-                              <span className="text-amber-600 text-xs ml-1">⚠</span>
+                              <span className="text-pacing-yellow-text text-xs ml-1">⚠</span>
                             )}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-500">Samples Approved</span>
-                          <span>
+                          <span className="text-gray-500">Samples Approved</span>
+                          <span className="text-gray-300">
                             {pod.totalSamplesApproved.toLocaleString('en-US')} / {pod.totalSamplesTarget.toLocaleString('en-US')}
                             {podSamplesR < podTotal && (
-                              <span className="text-amber-600 text-xs ml-1">⚠</span>
+                              <span className="text-pacing-yellow-text text-xs ml-1">⚠</span>
                             )}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-500">Ad Spend</span>
-                          <span>
+                          <span className="text-gray-500">Ad Spend</span>
+                          <span className="text-gray-300">
                             {fmtCurrency(pod.totalAdSpend)} / {fmtCurrency(pod.totalSpendTarget)}
                             {podSpendR < podTotal && (
-                              <span className="text-amber-600 text-xs ml-1">⚠</span>
+                              <span className="text-pacing-yellow-text text-xs ml-1">⚠</span>
                             )}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-500">Avg ROI</span>
-                          <span>{pod.avgRoi.toFixed(2)}</span>
+                          <span className="text-gray-500">Avg ROI</span>
+                          <span className="text-gray-300">{pod.avgRoi.toFixed(2)}</span>
                         </div>
                         {/* Pipeline metrics */}
-                        <div className="border-t border-slate-100 pt-2 mt-2">
+                        <div className="border-t border-zt-border pt-2 mt-2">
                           <div className="flex justify-between">
-                            <span className="text-slate-500">Samples Declined</span>
-                            <span>{pod.totalSamplesDecline.toLocaleString('en-US')}</span>
+                            <span className="text-gray-500">Samples Declined</span>
+                            <span className="text-gray-300">{pod.totalSamplesDecline.toLocaleString('en-US')}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-slate-500">Invites Sent</span>
-                            <span>{pod.totalInvitesSent.toLocaleString('en-US')}</span>
+                            <span className="text-gray-500">Invites Sent</span>
+                            <span className="text-gray-300">{pod.totalInvitesSent.toLocaleString('en-US')}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-slate-500">Spark Codes</span>
-                            <span>{pod.totalSparkCodes.toLocaleString('en-US')}</span>
+                            <span className="text-gray-500">Spark Codes</span>
+                            <span className="text-gray-300">{pod.totalSparkCodes.toLocaleString('en-US')}</span>
                           </div>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-500">Clients</span>
-                          <span>{pod.clients.length}</span>
+                          <span className="text-gray-500">Clients</span>
+                          <span className="text-gray-300">{pod.clients.length}</span>
                         </div>
                       </div>
                       {(podGmvR < podTotal || podVideoR < podTotal || podSamplesR < podTotal || podSpendR < podTotal) && (
-                        <div className="mt-3 text-xs text-amber-600 border-t border-amber-200 pt-2">
+                        <div className="mt-3 text-xs text-pacing-yellow-text border-t border-pacing-yellow-bg pt-2">
                           ⚠ {podWarn(podGmvR) && `GMV${podWarn(podGmvR)}`}
                           {podVideoR < podTotal && ` Video${podWarn(podVideoR)}`}
                           {podSamplesR < podTotal && ` Samples${podWarn(podSamplesR)}`}

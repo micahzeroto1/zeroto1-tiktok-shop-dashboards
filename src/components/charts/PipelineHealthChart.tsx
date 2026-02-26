@@ -9,7 +9,6 @@ interface PipelineHealthChartProps {
 }
 
 export default function PipelineHealthChart({ clients }: PipelineHealthChartProps) {
-  // Only show if there's any L0-L6 data
   const hasData = clients.some(
     (c) =>
       c.l0Approved > 0 || c.l1Approved > 0 || c.l2Approved > 0 ||
@@ -19,7 +18,7 @@ export default function PipelineHealthChart({ clients }: PipelineHealthChartProp
   if (!hasData) return null;
 
   const clientNames = clients.map((c) => c.clientName);
-  const colors = ['#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#c084fc', '#d8b4fe', '#e9d5ff'];
+  const colors = ['#FCEB03', '#E5D403', '#CCC003', '#B3AA03', '#999503', '#807F03', '#666A03'];
   const levels = ['L0', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6'];
   const getters: ((c: ClientMtdSummary) => number)[] = [
     (c) => c.l0Approved,
@@ -51,14 +50,14 @@ export default function PipelineHealthChart({ clients }: PipelineHealthChartProp
           name: 'Approved',
           x: clientNames,
           y: clients.map((c) => c.totalSamplesApproved),
-          marker: { color: '#10b981' },
+          marker: { color: '#22C55E' },
         },
         {
           type: 'bar',
           name: 'Declined',
           x: clientNames,
           y: clients.map((c) => c.samplesDecline),
-          marker: { color: '#ef4444' },
+          marker: { color: '#EF4444' },
         },
       ]
     : [];
@@ -67,11 +66,11 @@ export default function PipelineHealthChart({ clients }: PipelineHealthChartProp
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold text-navy-900">Pipeline Health</h2>
+      <h2 className="text-xl font-bold text-white">Pipeline Health</h2>
 
       {hasSampleData && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h3 className="text-lg font-semibold text-navy-900 mb-4">
+        <div className="bg-zt-card rounded-xl border border-zt-border p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">
             Samples Approved vs Declined
           </h3>
           <PlotlyChart
@@ -86,8 +85,8 @@ export default function PipelineHealthChart({ clients }: PipelineHealthChartProp
         </div>
       )}
 
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 className="text-lg font-semibold text-navy-900 mb-4">
+      <div className="bg-zt-card rounded-xl border border-zt-border p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">
           Sample Approval Levels (L0–L6) by Client
         </h3>
         <PlotlyChart

@@ -1,6 +1,6 @@
 'use client';
 
-import { buildWeekLabels } from '@/lib/week-labels';
+import { buildWeekLabels, isCurrentWeek } from '@/lib/week-labels';
 import type { WeeklyRollup } from '@/types/dashboard';
 
 interface WeeklyTableProps {
@@ -21,32 +21,42 @@ export default function WeeklyTable({ weeklyData }: WeeklyTableProps) {
   const labels = buildWeekLabels(weeklyData);
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-6 overflow-x-auto">
-      <h3 className="text-lg font-semibold text-navy-900 mb-4">Weekly Summary</h3>
+    <div className="bg-zt-card rounded-xl border border-zt-border p-6 overflow-x-auto">
+      <h3 className="text-lg font-semibold text-white mb-4">Weekly Summary</h3>
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-slate-200">
-            <th className="text-left py-3 px-2 font-semibold text-slate-600">Week</th>
-            <th className="text-right py-3 px-2 font-semibold text-slate-600">GMV</th>
-            <th className="text-right py-3 px-2 font-semibold text-slate-600">Target</th>
-            <th className="text-right py-3 px-2 font-semibold text-slate-600">Videos</th>
-            <th className="text-right py-3 px-2 font-semibold text-slate-600">Samples</th>
-            <th className="text-right py-3 px-2 font-semibold text-slate-600">Ad Spend</th>
-            <th className="text-right py-3 px-2 font-semibold text-slate-600">ROI</th>
+          <tr className="border-b border-zt-border">
+            <th className="text-left py-3 px-2 font-semibold text-gray-400 bg-zt-table-header">Week</th>
+            <th className="text-right py-3 px-2 font-semibold text-gray-400 bg-zt-table-header">GMV</th>
+            <th className="text-right py-3 px-2 font-semibold text-gray-400 bg-zt-table-header">Target</th>
+            <th className="text-right py-3 px-2 font-semibold text-gray-400 bg-zt-table-header">Videos</th>
+            <th className="text-right py-3 px-2 font-semibold text-gray-400 bg-zt-table-header">Samples</th>
+            <th className="text-right py-3 px-2 font-semibold text-gray-400 bg-zt-table-header">Ad Spend</th>
+            <th className="text-right py-3 px-2 font-semibold text-gray-400 bg-zt-table-header">ROI</th>
           </tr>
         </thead>
         <tbody>
-          {weeklyData.map((week, i) => (
-            <tr key={i} className="border-b border-slate-100 hover:bg-slate-50">
-              <td className="py-3 px-2 font-medium">{labels[i]}</td>
-              <td className="py-3 px-2 text-right">{fmtCurrency(week.dailyGmv)}</td>
-              <td className="py-3 px-2 text-right text-slate-500">{fmtCurrency(week.gmvTarget)}</td>
-              <td className="py-3 px-2 text-right">{fmtNumber(week.videosPosted)}</td>
-              <td className="py-3 px-2 text-right">{fmtNumber(week.totalSamplesApproved)}</td>
-              <td className="py-3 px-2 text-right">{fmtCurrency(week.adSpend)}</td>
-              <td className="py-3 px-2 text-right">{week.roi.toFixed(2)}</td>
-            </tr>
-          ))}
+          {weeklyData.map((week, i) => {
+            const isCurrent = i === weeklyData.length - 1 && isCurrentWeek(week.date);
+            const rowBg = i % 2 === 1 ? 'bg-zt-table-alt' : '';
+
+            return (
+              <tr key={i} className={`border-b border-zt-border hover:bg-zt-table-hover ${rowBg}`}>
+                <td className="py-3 px-2 font-medium text-white">
+                  {labels[i]}
+                  {isCurrent && (
+                    <span className="ml-2 text-xs font-medium text-zt-yellow">(in progress)</span>
+                  )}
+                </td>
+                <td className="py-3 px-2 text-right text-white">{fmtCurrency(week.dailyGmv)}</td>
+                <td className="py-3 px-2 text-right text-gray-500">{fmtCurrency(week.gmvTarget)}</td>
+                <td className="py-3 px-2 text-right text-gray-300">{fmtNumber(week.videosPosted)}</td>
+                <td className="py-3 px-2 text-right text-gray-300">{fmtNumber(week.totalSamplesApproved)}</td>
+                <td className="py-3 px-2 text-right text-gray-300">{fmtCurrency(week.adSpend)}</td>
+                <td className="py-3 px-2 text-right text-gray-300">{week.roi.toFixed(2)}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

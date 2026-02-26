@@ -9,8 +9,6 @@ interface MonthlyTrendChartProps {
 }
 
 export default function MonthlyTrendChart({ monthlyData }: MonthlyTrendChartProps) {
-  // monthlyData is already filtered (no empty months) by aggregateByMonth()
-  // Only show chart if there are at least 2 months of data
   if (monthlyData.length < 2) return null;
 
   const months = monthlyData.map((m) => m.month);
@@ -22,7 +20,7 @@ export default function MonthlyTrendChart({ monthlyData }: MonthlyTrendChartProp
       y: monthlyData.map((m) => m.totalGmv),
       name: 'GMV Actual',
       mode: 'lines+markers',
-      line: { color: '#10b981', width: 3 },
+      line: { color: '#FCEB03', width: 3 },
       marker: { size: 8 },
     },
     {
@@ -31,7 +29,7 @@ export default function MonthlyTrendChart({ monthlyData }: MonthlyTrendChartProp
       y: monthlyData.map((m) => m.gmvTarget),
       name: 'GMV Target',
       mode: 'lines',
-      line: { color: '#ef4444', width: 2, dash: 'dash' },
+      line: { color: '#9CA3AF', width: 2, dash: 'dash' },
     },
     {
       type: 'scatter',
@@ -39,15 +37,15 @@ export default function MonthlyTrendChart({ monthlyData }: MonthlyTrendChartProp
       y: monthlyData.map((m) => m.avgRoi),
       name: 'ROI',
       mode: 'lines+markers',
-      line: { color: '#6366f1', width: 2 },
+      line: { color: '#22C55E', width: 2 },
       marker: { size: 6 },
       yaxis: 'y2',
     },
   ];
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-6">
-      <h3 className="text-lg font-semibold text-navy-900 mb-4">Monthly Trends</h3>
+    <div className="bg-zt-card rounded-xl border border-zt-border p-6">
+      <h3 className="text-lg font-semibold text-white mb-4">Monthly Trends</h3>
       <PlotlyChart
         data={data}
         layout={{

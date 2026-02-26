@@ -12,9 +12,9 @@ export default function PacingLeaderboard({ clients }: PacingLeaderboardProps) {
   const sorted = [...clients].sort((a, b) => b.gmvPacing - a.gmvPacing);
 
   const colors = sorted.map((c) => {
-    if (c.gmvPacing >= 0.95) return '#10b981';
-    if (c.gmvPacing >= 0.80) return '#f59e0b';
-    return '#ef4444';
+    if (c.gmvPacing >= 0.95) return '#22C55E';
+    if (c.gmvPacing >= 0.80) return '#EAB308';
+    return '#EF4444';
   });
 
   const data: PlotlyData[] = [
@@ -26,6 +26,7 @@ export default function PacingLeaderboard({ clients }: PacingLeaderboardProps) {
       marker: { color: colors },
       text: sorted.map((c) => `${(c.gmvPacing * 100).toFixed(0)}%`),
       textposition: 'outside',
+      textfont: { color: '#9CA3AF' },
     },
   ];
 
@@ -33,8 +34,8 @@ export default function PacingLeaderboard({ clients }: PacingLeaderboardProps) {
   const maxPacing = Math.max(120, ...sorted.map((c) => c.gmvPacing * 100 + 15));
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-6">
-      <h3 className="text-lg font-semibold text-navy-900 mb-4">MTD GMV Pacing Leaderboard</h3>
+    <div className="bg-zt-card rounded-xl border border-zt-border p-6">
+      <h3 className="text-lg font-semibold text-white mb-4">MTD GMV Pacing Leaderboard</h3>
       <PlotlyChart
         data={data}
         layout={{
@@ -52,7 +53,7 @@ export default function PacingLeaderboard({ clients }: PacingLeaderboardProps) {
               x1: 100,
               y0: -0.5,
               y1: sorted.length - 0.5,
-              line: { color: '#ef4444', width: 2, dash: 'dash' },
+              line: { color: '#EF4444', width: 2, dash: 'dash' },
             },
           ],
         }}

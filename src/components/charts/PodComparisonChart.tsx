@@ -33,6 +33,7 @@ function buildHorizontalBarChart(
           : v.toLocaleString('en-US', { maximumFractionDigits: 0 })
       ),
       textposition: 'outside',
+      textfont: { color: '#9CA3AF' },
     },
     {
       type: 'bar',
@@ -40,7 +41,7 @@ function buildHorizontalBarChart(
       x: targets,
       name: targetLabel,
       orientation: 'h',
-      marker: { color: 'rgba(239, 68, 68, 0.3)' },
+      marker: { color: '#374151' },
     },
   ];
 
@@ -50,8 +51,10 @@ function buildHorizontalBarChart(
 export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
   if (pods.length === 0) return null;
 
+  // Use full pod names for labels — increase left margin to fit
   const podNames = pods.map((p) => p.podName);
   const chartHeight = Math.max(250, pods.length * 80);
+  const leftMargin = 120; // enough space for "Meredith's Pod"
 
   // GMV
   const gmv = buildHorizontalBarChart(
@@ -60,7 +63,7 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
     pods.map((p) => p.totalMtdTarget),
     'MTD GMV',
     'Target',
-    '#10b981',
+    '#FCEB03',
     true,
   );
 
@@ -71,7 +74,7 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
     pods.map((p) => p.totalVideoTarget),
     'Videos Posted',
     'Target',
-    'rgba(59, 130, 246, 0.85)',
+    '#FCEB03',
     false,
   );
 
@@ -82,7 +85,7 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
     pods.map((p) => p.totalSamplesTarget),
     'Samples Approved',
     'Target',
-    'rgba(168, 85, 247, 0.85)',
+    '#FCEB03',
     false,
   );
 
@@ -93,18 +96,19 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
     pods.map((p) => p.totalSpendTarget),
     'Ad Spend',
     'Target',
-    'rgba(245, 158, 11, 0.85)',
+    '#FCEB03',
     true,
   );
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 className="text-lg font-semibold text-navy-900 mb-4">Pod GMV Comparison</h3>
+      <div className="bg-zt-card rounded-xl border border-zt-border p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">Pod GMV Comparison</h3>
         <PlotlyChart
           data={gmv.data}
           layout={{
             barmode: 'group',
+            margin: { l: leftMargin },
             xaxis: {
               title: { text: 'GMV ($)' },
               tickprefix: '$',
@@ -117,12 +121,13 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
         />
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 className="text-lg font-semibold text-navy-900 mb-4">Pod Videos Comparison</h3>
+      <div className="bg-zt-card rounded-xl border border-zt-border p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">Pod Videos Comparison</h3>
         <PlotlyChart
           data={videos.data}
           layout={{
             barmode: 'group',
+            margin: { l: leftMargin },
             xaxis: {
               title: { text: 'Videos Posted' },
               tickformat: ',.0f',
@@ -134,12 +139,13 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
         />
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 className="text-lg font-semibold text-navy-900 mb-4">Pod Samples Comparison</h3>
+      <div className="bg-zt-card rounded-xl border border-zt-border p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">Pod Samples Comparison</h3>
         <PlotlyChart
           data={samples.data}
           layout={{
             barmode: 'group',
+            margin: { l: leftMargin },
             xaxis: {
               title: { text: 'Samples Approved' },
               tickformat: ',.0f',
@@ -151,12 +157,13 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
         />
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 className="text-lg font-semibold text-navy-900 mb-4">Pod Ad Spend Comparison</h3>
+      <div className="bg-zt-card rounded-xl border border-zt-border p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">Pod Ad Spend Comparison</h3>
         <PlotlyChart
           data={spend.data}
           layout={{
             barmode: 'group',
+            margin: { l: leftMargin },
             xaxis: {
               title: { text: 'Ad Spend ($)' },
               tickprefix: '$',
@@ -171,8 +178,8 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
 
       {/* Pipeline Comparison */}
       {pods.some((p) => p.totalSamplesApproved > 0 || p.totalSamplesDecline > 0) && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h3 className="text-lg font-semibold text-navy-900 mb-4">Pod Pipeline Comparison</h3>
+        <div className="bg-zt-card rounded-xl border border-zt-border p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Pod Pipeline Comparison</h3>
           <PlotlyChart
             data={[
               {
@@ -181,7 +188,7 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
                 x: pods.map((p) => p.totalSamplesApproved),
                 name: 'Approved',
                 orientation: 'h',
-                marker: { color: '#10b981' },
+                marker: { color: '#22C55E' },
               },
               {
                 type: 'bar',
@@ -189,11 +196,12 @@ export default function PodComparisonChart({ pods }: PodComparisonChartProps) {
                 x: pods.map((p) => p.totalSamplesDecline),
                 name: 'Declined',
                 orientation: 'h',
-                marker: { color: '#ef4444' },
+                marker: { color: '#EF4444' },
               },
             ] as PlotlyData[]}
             layout={{
               barmode: 'group',
+              margin: { l: leftMargin },
               xaxis: {
                 title: { text: 'Count' },
                 tickformat: ',.0f',

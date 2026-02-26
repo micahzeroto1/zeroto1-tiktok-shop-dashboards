@@ -41,7 +41,6 @@ function PodDashboardContent({ data }: { data: PodApiResponse }) {
     ? roiClients.reduce((s, c) => s + c.roi, 0) / roiClients.length
     : 0;
 
-  // Data health: count clients with targets set per metric
   const total = data.clients.length;
   const gmvReporting = data.clients.filter((c) => c.gmvTargetMonth > 0).length;
   const videoReporting = data.clients.filter((c) => c.monthlyVideoTarget > 0).length;
@@ -52,6 +51,10 @@ function PodDashboardContent({ data }: { data: PodApiResponse }) {
     return reporting < total ? `${reporting} of ${total} clients reporting` : undefined;
   }
 
+  const pacingColor = (status: string) =>
+    status === 'green' ? 'text-pacing-green-text' :
+    status === 'yellow' ? 'text-pacing-yellow-text' : 'text-pacing-red-text';
+
   return (
     <DashboardShell
       title={`${data.podName} Dashboard`}
@@ -61,54 +64,12 @@ function PodDashboardContent({ data }: { data: PodApiResponse }) {
       {/* Pod Summary KPIs */}
       <section className="mb-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <KpiCard
-            label="Pod MTD GMV"
-            value={totalMtdGmv}
-            target={totalTarget}
-            pacing={gmvPacing}
-            status={getPacingStatus(gmvPacing)}
-            format="currency"
-            warning={dataWarning(gmvReporting)}
-          />
-          <KpiCard
-            label="Pod Videos Posted"
-            value={totalVideos}
-            target={totalVideoTarget}
-            pacing={videoPacing}
-            status={getPacingStatus(videoPacing)}
-            format="number"
-            warning={dataWarning(videoReporting)}
-          />
-          <KpiCard
-            label="Pod Samples Approved"
-            value={totalSamples}
-            target={totalSamplesTarget}
-            pacing={samplesPacing}
-            status={getPacingStatus(samplesPacing)}
-            format="number"
-            warning={dataWarning(samplesReporting)}
-          />
-          <KpiCard
-            label="Pod Ad Spend"
-            value={totalSpend}
-            target={totalSpendTarget}
-            pacing={spendPacing}
-            status={getPacingStatus(spendPacing)}
-            format="currency"
-            warning={dataWarning(spendReporting)}
-          />
-          <KpiCard
-            label="Avg ROI"
-            value={avgRoi}
-            status="green"
-            format="roi"
-          />
-          <KpiCard
-            label="Active Clients"
-            value={data.clients.length}
-            status="green"
-            format="number"
-          />
+          <KpiCard label="Pod MTD GMV" value={totalMtdGmv} target={totalTarget} pacing={gmvPacing} status={getPacingStatus(gmvPacing)} format="currency" warning={dataWarning(gmvReporting)} />
+          <KpiCard label="Pod Videos Posted" value={totalVideos} target={totalVideoTarget} pacing={videoPacing} status={getPacingStatus(videoPacing)} format="number" warning={dataWarning(videoReporting)} />
+          <KpiCard label="Pod Samples Approved" value={totalSamples} target={totalSamplesTarget} pacing={samplesPacing} status={getPacingStatus(samplesPacing)} format="number" warning={dataWarning(samplesReporting)} />
+          <KpiCard label="Pod Ad Spend" value={totalSpend} target={totalSpendTarget} pacing={spendPacing} status={getPacingStatus(spendPacing)} format="currency" warning={dataWarning(spendReporting)} />
+          <KpiCard label="Avg ROI" value={avgRoi} status="green" format="roi" />
+          <KpiCard label="Active Clients" value={data.clients.length} status="green" format="number" />
         </div>
       </section>
 
@@ -147,52 +108,49 @@ function PodDashboardContent({ data }: { data: PodApiResponse }) {
 
       {/* Per-Client Scorecard Grid */}
       <section className="mb-8">
-        <h2 className="text-xl font-bold text-navy-900 mb-4">Client Scorecards</h2>
+        <h2 className="text-xl font-bold text-white mb-4">Client Scorecards</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {data.clients.map((client) => (
             <div
               key={client.clientSlug}
-              className="bg-white rounded-xl border border-slate-200 p-4"
+              className="bg-zt-card rounded-xl border border-zt-border p-4"
             >
-              <h4 className="font-semibold text-navy-900 mb-3">{client.clientName}</h4>
+              <h4 className="font-semibold text-white mb-3">{client.clientName}</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">MTD GMV</span>
-                  <span className="font-medium">{fmtCurrency(client.cumulativeMtdGmv)} / {fmtCurrency(client.gmvTargetMonth)}</span>
+                  <span className="text-gray-500">MTD GMV</span>
+                  <span className="font-medium text-gray-300">{fmtCurrency(client.cumulativeMtdGmv)} / {fmtCurrency(client.gmvTargetMonth)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Pacing</span>
-                  <span className={`font-bold ${
-                    client.gmvStatus === 'green' ? 'text-emerald-600' :
-                    client.gmvStatus === 'yellow' ? 'text-amber-600' : 'text-rose-600'
-                  }`}>
+                  <span className="text-gray-500">Pacing</span>
+                  <span className={`font-bold ${pacingColor(client.gmvStatus)}`}>
                     {(client.gmvPacing * 100).toFixed(0)}%
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Videos</span>
-                  <span>{client.videosPosted.toLocaleString('en-US')} / {client.monthlyVideoTarget.toLocaleString('en-US')}</span>
+                  <span className="text-gray-500">Videos</span>
+                  <span className="text-gray-300">{client.videosPosted.toLocaleString('en-US')} / {client.monthlyVideoTarget.toLocaleString('en-US')}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Samples</span>
-                  <span>{client.totalSamplesApproved.toLocaleString('en-US')} / {client.targetSamplesGoals.toLocaleString('en-US')}</span>
+                  <span className="text-gray-500">Samples</span>
+                  <span className="text-gray-300">{client.totalSamplesApproved.toLocaleString('en-US')} / {client.targetSamplesGoals.toLocaleString('en-US')}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Ad Spend</span>
-                  <span>{fmtCurrency(client.adSpend)} / {fmtCurrency(client.spendTarget)}</span>
+                  <span className="text-gray-500">Ad Spend</span>
+                  <span className="text-gray-300">{fmtCurrency(client.adSpend)} / {fmtCurrency(client.spendTarget)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">ROI</span>
-                  <span>{client.roi.toFixed(2)}{client.roiTarget > 0 ? ` / ${client.roiTarget.toFixed(2)}` : ''}</span>
+                  <span className="text-gray-500">ROI</span>
+                  <span className="text-gray-300">{client.roi.toFixed(2)}{client.roiTarget > 0 ? ` / ${client.roiTarget.toFixed(2)}` : ''}</span>
                 </div>
-                <div className="border-t border-slate-100 pt-2 mt-2">
+                <div className="border-t border-zt-border pt-2 mt-2">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Invites Sent</span>
-                    <span>{client.targetInvitesSent.toLocaleString('en-US')}</span>
+                    <span className="text-gray-500">Invites Sent</span>
+                    <span className="text-gray-300">{client.targetInvitesSent.toLocaleString('en-US')}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Spark Codes</span>
-                    <span>{client.sparkCodesAcquired.toLocaleString('en-US')}</span>
+                    <span className="text-gray-500">Spark Codes</span>
+                    <span className="text-gray-300">{client.sparkCodesAcquired.toLocaleString('en-US')}</span>
                   </div>
                 </div>
               </div>

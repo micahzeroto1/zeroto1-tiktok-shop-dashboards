@@ -1,7 +1,7 @@
 'use client';
 
 import PlotlyChart from './PlotlyChart';
-import { buildWeekLabels } from '@/lib/week-labels';
+import { buildWeekLabels, isCurrentWeek } from '@/lib/week-labels';
 import type { WeeklyRollup } from '@/types/dashboard';
 import type { PlotlyData } from '@/types/plotly';
 
@@ -16,34 +16,43 @@ export default function WeeklyBarChart({ weeklyData }: WeeklyBarChartProps) {
   const gmvValues = weeklyData.map((w) => w.dailyGmv);
   const targetValues = weeklyData.map((w) => w.gmvTarget);
 
-  // Last bar is current (partial) week — use lighter color
+  // Current (partial) week — lighter yellow with hatched pattern
+  const lastIdx = gmvValues.length - 1;
+  const lastIsCurrent = isCurrentWeek(weeklyData[lastIdx]?.date || '');
+
   const colors = gmvValues.map((_, i) =>
-    i === gmvValues.length - 1 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(16, 185, 129, 0.85)'
+    i === lastIdx && lastIsCurrent ? 'rgba(252, 235, 3, 0.35)' : '#FCEB03'
+  );
+
+  // Update label for current week
+  const displayLabels = labels.map((label, i) =>
+    i === lastIdx && lastIsCurrent ? `${label} (in progress)` : label
   );
 
   const data: PlotlyData[] = [
     {
       type: 'bar',
-      x: labels,
+      x: displayLabels,
       y: gmvValues,
       name: 'GMV Actual',
       marker: { color: colors },
       text: gmvValues.map((v) => `$${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}`),
       textposition: 'outside',
+      textfont: { color: '#9CA3AF' },
     },
     {
       type: 'scatter',
-      x: labels,
+      x: displayLabels,
       y: targetValues,
       name: 'Weekly Target',
       mode: 'lines',
-      line: { color: '#ef4444', width: 2, dash: 'dash' },
+      line: { color: '#9CA3AF', width: 2, dash: 'dash' },
     },
   ];
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-6">
-      <h3 className="text-lg font-semibold text-navy-900 mb-4">Weekly GMV Performance</h3>
+    <div className="bg-zt-card rounded-xl border border-zt-border p-6">
+      <h3 className="text-lg font-semibold text-white mb-4">Weekly GMV Performance</h3>
       <PlotlyChart
         data={data}
         layout={{
