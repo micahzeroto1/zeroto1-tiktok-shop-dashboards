@@ -66,10 +66,10 @@ export default function CeoDashboardPage() {
                 <KpiCard
                   label="YTD GMV"
                   value={data.ytdGmv}
-                  target={data.ytdTarget}
                   pacing={data.ytdTarget > 0 ? data.ytdGmv / data.ytdTarget : 0}
                   status={getPacingStatus(data.ytdTarget > 0 ? data.ytdGmv / data.ytdTarget : 0)}
                   format="currency"
+                  subtitle={`Target: ${fmtCurrency(data.ytdTarget)} / ${fmtCurrency(data.annualTarget)}`}
                 />
                 <KpiCard
                   label="Active Pods"
