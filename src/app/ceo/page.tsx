@@ -39,7 +39,7 @@ export default function CeoDashboardPage() {
 
         return (
           <DashboardShell
-            title="CEO Dashboard"
+            title="Department Dashboard"
             subtitle="Company-Wide TikTok Shop Performance"
             lastUpdated={data.lastUpdated}
           >
