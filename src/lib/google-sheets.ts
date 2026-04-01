@@ -31,3 +31,25 @@ export async function fetchSheetRanges(
     (vr) => (vr.values || []) as string[][]
   );
 }
+
+/**
+ * Fetch ranges for a single client (raw + rollup tabs).
+ * Returns null if the tabs are missing/renamed instead of throwing.
+ */
+export async function fetchClientRangesSafe(
+  spreadsheetId: string,
+  rawTabName: string,
+  rollupTabName: string
+): Promise<{ rawRows: string[][]; rollupRows: string[][] } | null> {
+  try {
+    const [rawRows, rollupRows] = await fetchSheetRanges(spreadsheetId, [
+      `'${rawTabName}'!A1:AZ1000`,
+      `'${rollupTabName}'!A1:AZ1000`,
+    ]);
+    return { rawRows, rollupRows };
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.warn(`Skipping client tabs '${rawTabName}'/'${rollupTabName}': ${msg}`);
+    return null;
+  }
+}

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validatePodToken } from '@/lib/auth';
-import { fetchSheetRanges } from '@/lib/google-sheets';
+import { fetchClientRangesSafe } from '@/lib/google-sheets';
 import { parseRawTab, parseRollupTab } from '@/lib/data-parser';
 import { buildMtdScorecardFromRollup, buildMtdScorecard } from '@/lib/pacing';
 import { CACHE_REVALIDATE_SECONDS } from '@/config/constants';
@@ -32,19 +32,21 @@ export async function GET(
   }
 
   try {
-    // Fetch raw + rollup tabs for each client in one batchGet
-    const ranges = pod.clients.flatMap((c) => [
-      `'${c.rawTabName}'!A1:AZ1000`,
-      `'${c.rollupTabName}'!A1:AZ1000`,
-    ]);
-
-    const allData = await fetchSheetRanges(pod.spreadsheetId, ranges);
+    // Fetch each client individually so one missing tab doesn't break the whole pod
+    const clientResults = await Promise.all(
+      pod.clients.map((clientConfig) =>
+        fetchClientRangesSafe(pod.spreadsheetId, clientConfig.rawTabName, clientConfig.rollupTabName)
+          .then((data) => ({ clientConfig, data }))
+      )
+    );
 
     const allWeeklyRows: WeeklyRollup[][] = [];
 
-    const clients: ClientMtdSummary[] = pod.clients.map((clientConfig, i) => {
-      const rawRows = allData[i * 2];
-      const rollupRows = allData[i * 2 + 1];
+    const clients: ClientMtdSummary[] = clientResults
+      .filter((r) => r.data !== null)
+      .map(({ clientConfig, data }) => {
+      const rawRows = data!.rawRows;
+      const rollupRows = data!.rollupRows;
 
       const daily = parseRawTab(rawRows);
       const { weeklyRows, monthlyRows } = parseRollupTab(rollupRows);

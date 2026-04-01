@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateClientToken } from '@/lib/auth';
-import { fetchSheetRanges } from '@/lib/google-sheets';
+import { fetchClientRangesSafe } from '@/lib/google-sheets';
 import { parseRawTab, parseRollupTab, parseSkuData, aggregateByMonth } from '@/lib/data-parser';
 import { buildMtdScorecardFromRollup, buildMtdScorecard } from '@/lib/pacing';
 import { CACHE_REVALIDATE_SECONDS } from '@/config/constants';
@@ -26,12 +26,15 @@ export async function GET(
   const { pod, client } = auth;
 
   try {
-    const ranges = [
-      `'${client.rawTabName}'!A1:AZ1000`,
-      `'${client.rollupTabName}'!A1:AZ1000`,
-    ];
+    const sheetData = await fetchClientRangesSafe(pod.spreadsheetId, client.rawTabName, client.rollupTabName);
+    if (!sheetData) {
+      return NextResponse.json(
+        { error: `Data unavailable for ${client.displayName}. The spreadsheet tabs may have been renamed or removed.` },
+        { status: 503 }
+      );
+    }
 
-    const [rawRows, rollupRows] = await fetchSheetRanges(pod.spreadsheetId, ranges);
+    const { rawRows, rollupRows } = sheetData;
 
     const dailyData = parseRawTab(rawRows);
     const { weeklyRows, monthlyRows } = parseRollupTab(rollupRows);
