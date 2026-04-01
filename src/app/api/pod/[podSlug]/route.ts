@@ -3,6 +3,7 @@ import { validatePodToken } from '@/lib/auth';
 import { fetchClientRangesSafe } from '@/lib/google-sheets';
 import { parseRawTab, parseRollupTab } from '@/lib/data-parser';
 import { buildMtdScorecardFromRollup, buildMtdScorecard } from '@/lib/pacing';
+import { sortWeeklyByDate } from '@/lib/week-labels';
 import { CACHE_REVALIDATE_SECONDS } from '@/config/constants';
 import type { ClientMtdSummary, PodApiResponse, WeeklyRollup } from '@/types/dashboard';
 
@@ -124,9 +125,7 @@ export async function GET(
         }
       }
     }
-    const weeklyData = Array.from(weekMap.values()).sort((a, b) =>
-      a.date.localeCompare(b.date)
-    );
+    const weeklyData = sortWeeklyByDate(Array.from(weekMap.values()));
 
     const response: PodApiResponse = {
       podName: pod.displayName,

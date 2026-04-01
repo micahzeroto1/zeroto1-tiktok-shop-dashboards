@@ -1,7 +1,7 @@
 'use client';
 
 import PlotlyChart from './PlotlyChart';
-import { buildWeekLabels, isCurrentWeek } from '@/lib/week-labels';
+import { buildWeekLabels, isCurrentWeek, sortWeeklyByDate } from '@/lib/week-labels';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import type { WeeklyRollup } from '@/types/dashboard';
 import type { PlotlyData } from '@/types/plotly';
@@ -15,13 +15,14 @@ export default function WeeklyBarChart({ weeklyData }: WeeklyBarChartProps) {
 
   if (weeklyData.length === 0) return null;
 
-  const labels = buildWeekLabels(weeklyData);
-  const gmvValues = weeklyData.map((w) => w.dailyGmv);
-  const targetValues = weeklyData.map((w) => w.gmvTarget);
+  const sorted = sortWeeklyByDate(weeklyData);
+  const labels = buildWeekLabels(sorted);
+  const gmvValues = sorted.map((w) => w.dailyGmv);
+  const targetValues = sorted.map((w) => w.gmvTarget);
 
   // Current (partial) week — lighter yellow with hatched pattern
   const lastIdx = gmvValues.length - 1;
-  const lastIsCurrent = isCurrentWeek(weeklyData[lastIdx]?.date || '');
+  const lastIsCurrent = isCurrentWeek(sorted[lastIdx]?.date || '');
 
   const colors = gmvValues.map((_, i) =>
     i === lastIdx && lastIsCurrent ? '#FCEB03' : '#4A90D9'

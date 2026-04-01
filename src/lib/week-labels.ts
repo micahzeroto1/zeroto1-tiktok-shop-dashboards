@@ -1,9 +1,20 @@
 import type { WeeklyRollup } from '@/types/dashboard';
 
 /** Parse a date string from Google Sheets (handles various formats) */
-function parseDate(dateStr: string): Date | null {
+export function parseDate(dateStr: string): Date | null {
   if (!dateStr) return null;
   const trimmed = dateStr.trim();
+
+  // Google Sheets serial date number (days since 1899-12-30)
+  if (/^\d{4,6}(\.\d+)?$/.test(trimmed)) {
+    const serial = parseFloat(trimmed);
+    if (serial > 40000 && serial < 60000) {
+      // Convert: epoch for serial 0 is 1899-12-30
+      const ms = (serial - 25569) * 86400000;
+      const d = new Date(ms);
+      return isNaN(d.getTime()) ? null : d;
+    }
+  }
 
   // Try ISO format: 2026-01-10
   if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
@@ -11,8 +22,8 @@ function parseDate(dateStr: string): Date | null {
     return isNaN(d.getTime()) ? null : d;
   }
 
-  // Try US format: 1/10/2026 or 01/10/2026
-  const usMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  // Try US format: 1/10/2026 or 01/10/2026 (with optional time)
+  const usMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
   if (usMatch) {
     const d = new Date(Number(usMatch[3]), Number(usMatch[1]) - 1, Number(usMatch[2]));
     return isNaN(d.getTime()) ? null : d;
@@ -21,6 +32,18 @@ function parseDate(dateStr: string): Date | null {
   // Fallback: let Date parse it
   const d = new Date(trimmed);
   return isNaN(d.getTime()) ? null : d;
+}
+
+/** Sort weekly rollup data by parsed date (chronological order) */
+export function sortWeeklyByDate(weeks: WeeklyRollup[]): WeeklyRollup[] {
+  return [...weeks].sort((a, b) => {
+    const da = parseDate(a.date);
+    const db = parseDate(b.date);
+    if (!da && !db) return 0;
+    if (!da) return 1;
+    if (!db) return -1;
+    return da.getTime() - db.getTime();
+  });
 }
 
 const SHORT_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
