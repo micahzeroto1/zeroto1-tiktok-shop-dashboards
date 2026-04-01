@@ -14,28 +14,35 @@ function TokenGateInner<T>({ apiPath, children }: TokenGateProps<T>) {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
   const [data, setData] = useState<T | null>(null);
-  const [error, setError] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!token) {
-      setError(true);
+      setErrorMsg('Invalid or missing access token.');
       setLoading(false);
       return;
     }
 
     fetch(`${apiPath}?token=${encodeURIComponent(token)}`)
-      .then((res) => {
-        if (!res.ok) throw new Error('Unauthorized');
+      .then(async (res) => {
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(
+            res.status === 401
+              ? 'Invalid or missing access token.'
+              : body.error || 'Unable to load dashboard data. Please try again later.'
+          );
+        }
         return res.json();
       })
       .then(setData)
-      .catch(() => setError(true))
+      .catch((err) => setErrorMsg(err.message || 'An unexpected error occurred.'))
       .finally(() => setLoading(false));
   }, [apiPath, token]);
 
   if (loading) return <LoadingState />;
-  if (error || !data) return <ErrorState />;
+  if (errorMsg || !data) return <ErrorState message={errorMsg ?? undefined} />;
 
   return <>{children(data)}</>;
 }
