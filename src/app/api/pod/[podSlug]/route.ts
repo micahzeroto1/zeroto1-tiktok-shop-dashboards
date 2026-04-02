@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validatePodToken } from '@/lib/auth';
 import { fetchClientRangesSafe } from '@/lib/google-sheets';
 import { parseRawTab, parseRollupTab } from '@/lib/data-parser';
-import { buildMtdScorecardFromRollup, buildMtdScorecard } from '@/lib/pacing';
+import { buildMtdScorecardFromRollup, buildMtdScorecard, buildAllMonthScorecards, buildScorecardFromRow } from '@/lib/pacing';
 import { sortWeeklyByDate } from '@/lib/week-labels';
 import { aggregateMonthlyAcrossClients } from '@/lib/aggregation';
 import { CACHE_REVALIDATE_SECONDS } from '@/config/constants';
@@ -28,6 +28,7 @@ export async function GET(
       podName: pod.displayName,
       podSlug: pod.slug,
       clients: [],
+      monthlyClients: {},
       weeklyData: [],
       monthlyData: [],
       lastUpdated: new Date().toISOString(),
@@ -45,31 +46,16 @@ export async function GET(
 
     const allWeeklyRows: WeeklyRollup[][] = [];
     const allMonthlyRows: WeeklyRollup[] = [];
+    const monthlyClientsMap = new Map<string, ClientMtdSummary[]>();
 
-    const clients: ClientMtdSummary[] = clientResults
-      .filter((r) => r.data !== null)
-      .map(({ clientConfig, data }) => {
-      const rawRows = data!.rawRows;
-      const rollupRows = data!.rollupRows;
-
-      const daily = parseRawTab(rawRows);
-      const { weeklyRows, monthlyRows } = parseRollupTab(rollupRows);
-
-      // Collect monthly rows for pod-level aggregation
-      allMonthlyRows.push(...monthlyRows);
-
-      // Collect weekly rows for pod-level aggregation
-      const activeWeekly = weeklyRows.filter(
-        (w) => w.dailyGmv > 0 || w.videosPosted > 0 || w.totalSamplesApproved > 0 || w.adSpend > 0
-      );
-      allWeeklyRows.push(activeWeekly);
-
-      const scorecard =
-        buildMtdScorecardFromRollup(monthlyRows) ?? buildMtdScorecard(daily);
-
-      return {
-        clientSlug: clientConfig.slug,
-        clientName: clientConfig.displayName,
+    const scorecardToClientSummary = (
+      scorecard: ReturnType<typeof buildScorecardFromRow>,
+      slug: string,
+      name: string,
+      dailyData: ReturnType<typeof parseRawTab> = []
+    ): ClientMtdSummary => ({
+        clientSlug: slug,
+        clientName: name,
         cumulativeMtdGmv: scorecard.cumulativeMtdGmv,
         gmvTargetMonth: scorecard.gmvTargetMonth,
         gmvPacing: scorecard.gmvPacing,
@@ -93,8 +79,39 @@ export async function GET(
         l4Approved: scorecard.l4Approved,
         l5Approved: scorecard.l5Approved,
         l6Approved: scorecard.l6Approved,
-        dailyData: daily,
-      };
+        dailyData,
+    });
+
+    const clients: ClientMtdSummary[] = clientResults
+      .filter((r) => r.data !== null)
+      .map(({ clientConfig, data }) => {
+      const rawRows = data!.rawRows;
+      const rollupRows = data!.rollupRows;
+
+      const daily = parseRawTab(rawRows);
+      const { weeklyRows, monthlyRows } = parseRollupTab(rollupRows);
+
+      // Collect monthly rows for pod-level aggregation
+      allMonthlyRows.push(...monthlyRows);
+
+      // Build per-month client summaries
+      const perMonth = buildAllMonthScorecards(monthlyRows);
+      for (const [mk, sc] of Object.entries(perMonth)) {
+        const list = monthlyClientsMap.get(mk) || [];
+        list.push(scorecardToClientSummary(sc, clientConfig.slug, clientConfig.displayName));
+        monthlyClientsMap.set(mk, list);
+      }
+
+      // Collect weekly rows for pod-level aggregation
+      const activeWeekly = weeklyRows.filter(
+        (w) => w.dailyGmv > 0 || w.videosPosted > 0 || w.totalSamplesApproved > 0 || w.adSpend > 0
+      );
+      allWeeklyRows.push(activeWeekly);
+
+      const scorecard =
+        buildMtdScorecardFromRollup(monthlyRows) ?? buildMtdScorecard(daily);
+
+      return scorecardToClientSummary(scorecard, clientConfig.slug, clientConfig.displayName, daily);
     });
 
     // Aggregate weekly data across all clients by weekLabel
@@ -135,10 +152,15 @@ export async function GET(
 
     const monthlyData = aggregateMonthlyAcrossClients(allMonthlyRows);
 
+    // Convert monthlyClientsMap to Record
+    const monthlyClients: Record<string, ClientMtdSummary[]> = {};
+    monthlyClientsMap.forEach((v, k) => { monthlyClients[k] = v; });
+
     const response: PodApiResponse = {
       podName: pod.displayName,
       podSlug: pod.slug,
       clients,
+      monthlyClients,
       weeklyData,
       monthlyData,
       lastUpdated: new Date().toISOString(),

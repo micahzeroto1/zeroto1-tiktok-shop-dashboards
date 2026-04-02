@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateCeoToken } from '@/lib/auth';
 import { fetchClientRangesSafe } from '@/lib/google-sheets';
 import { parseRawTab, parseRollupTab } from '@/lib/data-parser';
-import { buildMtdScorecardFromRollup, buildMtdScorecard } from '@/lib/pacing';
+import { buildMtdScorecardFromRollup, buildMtdScorecard, buildAllMonthScorecards, buildScorecardFromRow } from '@/lib/pacing';
 import { aggregatePod, aggregateCompany, aggregateMonthlyAcrossClients } from '@/lib/aggregation';
 import { config } from '@/config/pods';
 import { sortWeeklyByDate } from '@/lib/week-labels';
 import { CACHE_REVALIDATE_SECONDS } from '@/config/constants';
-import type { ClientMtdSummary, WeeklyRollup } from '@/types/dashboard';
+import type { ClientMtdSummary, PodSummary, WeeklyRollup } from '@/types/dashboard';
 
 export const revalidate = CACHE_REVALIDATE_SECONDS;
 
@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
       .map(async (pod) => {
         const allMonthlyRows: WeeklyRollup[] = [];
         const allWeeklyRows: WeeklyRollup[][] = [];
+        const perMonthClients = new Map<string, ClientMtdSummary[]>();
 
         // Fetch each client individually so one missing tab doesn't break the whole pod
         const clientResults = await Promise.all(
@@ -34,6 +35,28 @@ export async function GET(request: NextRequest) {
               .then((data) => ({ clientConfig, data }))
           )
         );
+
+        const toClientSummary = (
+          scorecard: ReturnType<typeof buildScorecardFromRow>,
+          slug: string,
+          name: string,
+          dailyData: ReturnType<typeof parseRawTab> = []
+        ): ClientMtdSummary => ({
+            clientSlug: slug, clientName: name,
+            cumulativeMtdGmv: scorecard.cumulativeMtdGmv, gmvTargetMonth: scorecard.gmvTargetMonth,
+            gmvPacing: scorecard.gmvPacing, gmvStatus: scorecard.gmvStatus,
+            projectedMonthlyGmv: scorecard.projectedMonthlyGmv,
+            videosPosted: scorecard.videosPosted, monthlyVideoTarget: scorecard.monthlyVideoTarget,
+            totalSamplesApproved: scorecard.totalSamplesApproved, targetSamplesGoals: scorecard.targetSamplesGoals,
+            adSpend: scorecard.adSpend, spendTarget: scorecard.spendTarget,
+            roi: scorecard.roi, roiTarget: scorecard.roiTarget,
+            sparkCodesAcquired: scorecard.sparkCodesAcquired, targetInvitesSent: scorecard.targetInvitesSent,
+            samplesDecline: scorecard.samplesDecline,
+            l0Approved: scorecard.l0Approved, l1Approved: scorecard.l1Approved,
+            l2Approved: scorecard.l2Approved, l3Approved: scorecard.l3Approved,
+            l4Approved: scorecard.l4Approved, l5Approved: scorecard.l5Approved,
+            l6Approved: scorecard.l6Approved, dailyData,
+        });
 
         const clients: ClientMtdSummary[] = clientResults
           .filter((r) => r.data !== null)
@@ -44,6 +67,14 @@ export async function GET(request: NextRequest) {
             // Collect monthly rows for YTD calculation
             allMonthlyRows.push(...monthlyRows);
 
+            // Build per-month client summaries
+            const perMonth = buildAllMonthScorecards(monthlyRows);
+            for (const [mk, sc] of Object.entries(perMonth)) {
+              const list = perMonthClients.get(mk) || [];
+              list.push(toClientSummary(sc, clientConfig.slug, clientConfig.displayName));
+              perMonthClients.set(mk, list);
+            }
+
             // Collect weekly rows for company-wide aggregation
             const activeWeekly = weeklyRows.filter(
               (w) => w.dailyGmv > 0 || w.videosPosted > 0 || w.totalSamplesApproved > 0 || w.adSpend > 0
@@ -53,37 +84,10 @@ export async function GET(request: NextRequest) {
             const scorecard =
               buildMtdScorecardFromRollup(monthlyRows) ?? buildMtdScorecard(daily);
 
-            return {
-              clientSlug: clientConfig.slug,
-              clientName: clientConfig.displayName,
-              cumulativeMtdGmv: scorecard.cumulativeMtdGmv,
-              gmvTargetMonth: scorecard.gmvTargetMonth,
-              gmvPacing: scorecard.gmvPacing,
-              gmvStatus: scorecard.gmvStatus,
-              projectedMonthlyGmv: scorecard.projectedMonthlyGmv,
-              videosPosted: scorecard.videosPosted,
-              monthlyVideoTarget: scorecard.monthlyVideoTarget,
-              totalSamplesApproved: scorecard.totalSamplesApproved,
-              targetSamplesGoals: scorecard.targetSamplesGoals,
-              adSpend: scorecard.adSpend,
-              spendTarget: scorecard.spendTarget,
-              roi: scorecard.roi,
-              roiTarget: scorecard.roiTarget,
-              sparkCodesAcquired: scorecard.sparkCodesAcquired,
-              targetInvitesSent: scorecard.targetInvitesSent,
-              samplesDecline: scorecard.samplesDecline,
-              l0Approved: scorecard.l0Approved,
-              l1Approved: scorecard.l1Approved,
-              l2Approved: scorecard.l2Approved,
-              l3Approved: scorecard.l3Approved,
-              l4Approved: scorecard.l4Approved,
-              l5Approved: scorecard.l5Approved,
-              l6Approved: scorecard.l6Approved,
-              dailyData: daily,
-            };
+            return toClientSummary(scorecard, clientConfig.slug, clientConfig.displayName, daily);
           });
 
-        return { pod: aggregatePod(pod.slug, pod.displayName, clients), monthlyRows: allMonthlyRows, weeklyRows: allWeeklyRows };
+        return { pod: aggregatePod(pod.slug, pod.displayName, clients), monthlyRows: allMonthlyRows, weeklyRows: allWeeklyRows, perMonthClients, podConfig: pod };
       });
 
     const podResults = await Promise.all(podDataPromises);
@@ -139,10 +143,37 @@ export async function GET(request: NextRequest) {
     }
     const weeklyData = sortWeeklyByDate(Array.from(weekMap.values()));
 
+    // Build per-month pods and allClients
+    const allMonthKeys = new Set<string>();
+    for (const r of podResults) {
+      r.perMonthClients.forEach((_, k) => allMonthKeys.add(k));
+    }
+
+    const monthlyPods: Record<string, PodSummary[]> = {};
+    const monthlyAllClients: Record<string, ClientMtdSummary[]> = {};
+
+    for (const mk of Array.from(allMonthKeys)) {
+      const podsForMonth: PodSummary[] = [];
+      const clientsForMonth: ClientMtdSummary[] = [];
+
+      for (const r of podResults) {
+        const podClients = r.perMonthClients.get(mk) || [];
+        if (podClients.length > 0) {
+          podsForMonth.push(aggregatePod(r.podConfig.slug, r.podConfig.displayName, podClients));
+        }
+        clientsForMonth.push(...podClients);
+      }
+
+      monthlyPods[mk] = podsForMonth;
+      monthlyAllClients[mk] = clientsForMonth;
+    }
+
     const response = aggregateCompany(podSummaries, ytdGmv);
 
     return NextResponse.json({
       ...response,
+      monthlyPods,
+      monthlyAllClients,
       weeklyData,
       monthlyData,
       lastUpdated: new Date().toISOString(),

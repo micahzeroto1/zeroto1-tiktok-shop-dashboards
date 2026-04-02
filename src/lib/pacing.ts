@@ -1,29 +1,10 @@
 import { getPacingStatus } from '@/config/constants';
 import { isCurrentMonth } from '@/lib/data-parser';
+import { parseDate } from '@/lib/week-labels';
 import type { DailyMetrics, WeeklyRollup, MtdScorecard } from '@/types/dashboard';
 
-/**
- * Build the MTD scorecard by reading directly from the monthly rollup row
- * for the current month.  Returns null when no matching row is found so the
- * caller can fall back to raw-data computation.
- */
-export function buildMtdScorecardFromRollup(
-  monthlyRows: WeeklyRollup[]
-): MtdScorecard | null {
-  // weekLabel on monthly rows holds the month name (e.g. "FEBRUARY")
-  const row = monthlyRows.find((r) => isCurrentMonth(r.weekLabel));
-
-  // Fall back to the most recent monthly row that has data
-  const fallbackRow = !row
-    ? [...monthlyRows]
-        .reverse()
-        .find((r) => r.cumulativeMtdGmv > 0 || r.videosPosted > 0)
-    : null;
-
-  const src = row ?? fallbackRow;
-  if (!src) return null;
-
-  // Compute pacing ratios from actual / target
+/** Build an MtdScorecard from a single monthly rollup row */
+export function buildScorecardFromRow(src: WeeklyRollup): MtdScorecard {
   const gmvPacing =
     src.gmvTarget > 0 ? src.cumulativeMtdGmv / src.gmvTarget : 0;
   const videoPacing =
@@ -60,7 +41,6 @@ export function buildMtdScorecardFromRollup(
     roi: src.roi,
     roiTarget: src.roiTarget,
     roiStatus,
-    // Pipeline metrics
     sparkCodesAcquired: src.sparkCodesAcquired,
     targetInvitesSent: src.targetInvitesSent,
     samplesDecline: src.samplesDecline,
@@ -72,6 +52,64 @@ export function buildMtdScorecardFromRollup(
     l5Approved: src.l5Approved,
     l6Approved: src.l6Approved,
   };
+}
+
+/**
+ * Build scorecards for ALL months, keyed by "YYYY-MM".
+ * Uses the date field from each monthly rollup row to derive the key.
+ */
+export function buildAllMonthScorecards(
+  monthlyRows: WeeklyRollup[]
+): Record<string, MtdScorecard> {
+  const result: Record<string, MtdScorecard> = {};
+  for (const row of monthlyRows) {
+    const key = monthKeyFromRow(row);
+    if (key) {
+      result[key] = buildScorecardFromRow(row);
+    }
+  }
+  return result;
+}
+
+/** Extract "YYYY-MM" from a monthly rollup row's date field, falling back to month name */
+function monthKeyFromRow(row: WeeklyRollup): string | null {
+  // Try parsing the date field
+  const d = parseDate(row.date);
+  if (d) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  }
+  // Fallback: derive from month name + current year
+  const MONTH_NAMES = [
+    'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
+    'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER',
+  ];
+  const idx = MONTH_NAMES.indexOf(row.weekLabel.toUpperCase());
+  if (idx >= 0) {
+    return `${new Date().getFullYear()}-${String(idx + 1).padStart(2, '0')}`;
+  }
+  return null;
+}
+
+/**
+ * Build the MTD scorecard by reading directly from the monthly rollup row
+ * for the current month.  Returns null when no matching row is found so the
+ * caller can fall back to raw-data computation.
+ */
+export function buildMtdScorecardFromRollup(
+  monthlyRows: WeeklyRollup[]
+): MtdScorecard | null {
+  const row = monthlyRows.find((r) => isCurrentMonth(r.weekLabel));
+
+  const fallbackRow = !row
+    ? [...monthlyRows]
+        .reverse()
+        .find((r) => r.cumulativeMtdGmv > 0 || r.videosPosted > 0)
+    : null;
+
+  const src = row ?? fallbackRow;
+  if (!src) return null;
+
+  return buildScorecardFromRow(src);
 }
 
 /**

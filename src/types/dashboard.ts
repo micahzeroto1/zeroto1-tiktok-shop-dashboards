@@ -118,6 +118,7 @@ export interface SkuData {
 export interface ClientApiResponse {
   clientName: string;
   mtdScorecard: MtdScorecard;
+  monthlyScorecards: Record<string, MtdScorecard>;
   weeklyData: WeeklyRollup[];
   monthlyData: MonthlyAggregate[];
   skuBreakdown?: SkuData[];
@@ -172,6 +173,7 @@ export interface PodApiResponse {
   podName: string;
   podSlug: string;
   clients: ClientMtdSummary[];
+  monthlyClients: Record<string, ClientMtdSummary[]>;
   weeklyData: WeeklyRollup[];
   monthlyData: MonthlyAggregate[];
   lastUpdated: string;
@@ -210,6 +212,8 @@ export interface CeoApiResponse {
   ytdTarget: number;
   pods: PodSummary[];
   allClients: ClientMtdSummary[];
+  monthlyPods: Record<string, PodSummary[]>;
+  monthlyAllClients: Record<string, ClientMtdSummary[]>;
   weeklyData: WeeklyRollup[];
   monthlyData: MonthlyAggregate[];
   lastUpdated: string;

@@ -115,7 +115,7 @@ export function aggregatePod(
   };
 }
 
-export function aggregateCompany(pods: PodSummary[], ytdGmv: number): Omit<CeoApiResponse, 'lastUpdated' | 'weeklyData' | 'monthlyData'> {
+export function aggregateCompany(pods: PodSummary[], ytdGmv: number): Omit<CeoApiResponse, 'lastUpdated' | 'weeklyData' | 'monthlyData' | 'monthlyPods' | 'monthlyAllClients'> {
   const companyMtdGmv = pods.reduce((s, p) => s + p.totalMtdGmv, 0);
   const companyMtdTarget = pods.reduce((s, p) => s + p.totalMtdTarget, 0);
   const companyGmvPacing = companyMtdTarget > 0

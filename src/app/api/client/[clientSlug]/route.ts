@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateClientToken } from '@/lib/auth';
 import { fetchClientRangesSafe } from '@/lib/google-sheets';
 import { parseRawTab, parseRollupTab, parseSkuData, aggregateByMonth } from '@/lib/data-parser';
-import { buildMtdScorecardFromRollup, buildMtdScorecard } from '@/lib/pacing';
+import { buildMtdScorecardFromRollup, buildMtdScorecard, buildAllMonthScorecards } from '@/lib/pacing';
 import { CACHE_REVALIDATE_SECONDS } from '@/config/constants';
 import type { ClientApiResponse } from '@/types/dashboard';
 
@@ -44,6 +44,9 @@ export async function GET(
     const mtdScorecard =
       buildMtdScorecardFromRollup(monthlyRows) ?? buildMtdScorecard(dailyData);
 
+    // Per-month scorecards for the month selector
+    const monthlyScorecards = buildAllMonthScorecards(monthlyRows);
+
     // Weekly data: only pre-aggregated weekly rollup rows with actual data
     const weeklyData = weeklyRows.filter(
       (w) => w.dailyGmv > 0 || w.videosPosted > 0 || w.totalSamplesApproved > 0 || w.adSpend > 0
@@ -62,6 +65,7 @@ export async function GET(
     const response: ClientApiResponse = {
       clientName: client.displayName,
       mtdScorecard,
+      monthlyScorecards,
       weeklyData,
       monthlyData,
       skuBreakdown: filteredSkuBreakdown,

@@ -31,11 +31,25 @@ function CeoDashboardContent({ data }: { data: CeoApiResponse }) {
   const [monthKey, setMonthKey] = useState(getCurrentMonthKey);
   const filteredWeekly = filterWeeklyByMonth(data.weeklyData, monthKey);
 
+  const activePods =
+    monthKey !== getCurrentMonthKey() && data.monthlyPods?.[monthKey]
+      ? data.monthlyPods[monthKey]
+      : data.pods;
+  const activeAllClients =
+    monthKey !== getCurrentMonthKey() && data.monthlyAllClients?.[monthKey]
+      ? data.monthlyAllClients[monthKey]
+      : data.allClients;
+
+  // Recompute company KPIs from active pods
+  const companyMtdGmv = activePods.reduce((s, p) => s + p.totalMtdGmv, 0);
+  const companyMtdTarget = activePods.reduce((s, p) => s + p.totalMtdTarget, 0);
+  const companyGmvPacing = companyMtdTarget > 0 ? companyMtdGmv / companyMtdTarget : 0;
+  const projectedMonthlyGmv = activePods.reduce((s, p) => s + p.projectedMonthlyGmv, 0);
+
   const monthlyTarget = data.annualTarget / 12;
 
-  const allClients = data.allClients;
-  const total = allClients.length;
-  const gmvReporting = allClients.filter((c) => c.gmvTargetMonth > 0).length;
+  const total = activeAllClients.length;
+  const gmvReporting = activeAllClients.filter((c) => c.gmvTargetMonth > 0).length;
 
   function companyWarning(reporting: number): string | undefined {
     return reporting < total ? `${reporting} of ${total} clients reporting` : undefined;
@@ -51,18 +65,25 @@ function CeoDashboardContent({ data }: { data: CeoApiResponse }) {
       subtitle="Company-Wide TikTok Shop Performance"
       lastUpdated={data.lastUpdated}
     >
+      {/* Month Filter */}
+      {data.weeklyData && data.weeklyData.length > 0 && (
+        <section className="mb-6">
+          <MonthFilter weeklyData={data.weeklyData} value={monthKey} onChange={setMonthKey} />
+        </section>
+      )}
+
       {/* Company Totals */}
       <section className="mb-8">
         <h2 className="text-xl font-bold text-white mb-4">Company Overview</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <KpiCard
             label="MTD GMV (All Pods)"
-            value={data.companyMtdGmv}
-            target={data.companyMtdTarget}
-            pacing={data.companyGmvPacing}
-            status={data.companyGmvStatus}
+            value={companyMtdGmv}
+            target={companyMtdTarget}
+            pacing={companyGmvPacing}
+            status={getPacingStatus(companyGmvPacing)}
             format="currency"
-            subtitle={data.projectedMonthlyGmv > 0 ? fmtProjected(data.projectedMonthlyGmv) : undefined}
+            subtitle={projectedMonthlyGmv > 0 ? fmtProjected(projectedMonthlyGmv) : undefined}
             warning={companyWarning(gmvReporting)}
           />
           <KpiCard
@@ -81,7 +102,7 @@ function CeoDashboardContent({ data }: { data: CeoApiResponse }) {
           />
           <KpiCard
             label="Active Pods"
-            value={data.pods.length}
+            value={activePods.length}
             status="green"
             format="number"
           />
@@ -96,32 +117,25 @@ function CeoDashboardContent({ data }: { data: CeoApiResponse }) {
         </section>
       )}
 
-      {/* Month Filter + Weekly Performance */}
-      {data.weeklyData && data.weeklyData.length > 0 && (
-        <>
-          <section className="mb-6">
-            <MonthFilter weeklyData={data.weeklyData} value={monthKey} onChange={setMonthKey} />
-          </section>
-          {filteredWeekly.length > 0 && (
-            <section className="mb-8 space-y-6">
-              <WeeklyBarChart weeklyData={filteredWeekly} />
-              <WeeklyMetricsCharts weeklyData={filteredWeekly} />
-              <WeeklyTable weeklyData={filteredWeekly} />
-            </section>
-          )}
-        </>
+      {/* Weekly Performance */}
+      {filteredWeekly.length > 0 && (
+        <section className="mb-8 space-y-6">
+          <WeeklyBarChart weeklyData={filteredWeekly} />
+          <WeeklyMetricsCharts weeklyData={filteredWeekly} />
+          <WeeklyTable weeklyData={filteredWeekly} />
+        </section>
       )}
 
       {/* Pod Comparison */}
       <section className="mb-8">
-        <PodComparisonChart pods={data.pods} />
+        <PodComparisonChart pods={activePods} />
       </section>
 
       {/* Pod Scorecards */}
       <section className="mb-8">
         <h2 className="text-xl font-bold text-white mb-4">Pod Breakdown</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {data.pods.map((pod) => {
+          {activePods.map((pod) => {
             const podTotal = pod.clients.length;
             const podGmvR = pod.clients.filter((c) => c.gmvTargetMonth > 0).length;
             const podVideoR = pod.clients.filter((c) => c.monthlyVideoTarget > 0).length;
@@ -222,7 +236,7 @@ function CeoDashboardContent({ data }: { data: CeoApiResponse }) {
 
       {/* Client Drill-Down Table */}
       <section className="mb-8">
-        <ClientDrillTable clients={data.allClients} />
+        <ClientDrillTable clients={activeAllClients} />
       </section>
     </DashboardShell>
   );

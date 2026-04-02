@@ -20,21 +20,26 @@ function ClientDashboardContent({ data }: { data: ClientApiResponse }) {
   const [monthKey, setMonthKey] = useState(getCurrentMonthKey);
   const filteredWeekly = filterWeeklyByMonth(data.weeklyData, monthKey);
 
+  const activeScorecard =
+    monthKey !== getCurrentMonthKey() && data.monthlyScorecards?.[monthKey]
+      ? data.monthlyScorecards[monthKey]
+      : data.mtdScorecard;
+
   return (
     <DashboardShell
       title={`${data.clientName} Dashboard`}
       subtitle="TikTok Shop Performance"
       lastUpdated={data.lastUpdated}
     >
-      {/* MTD Scorecard — always current month */}
-      <section className="mb-8">
-        <h2 className="text-xl font-bold text-white mb-4">Month-to-Date Scorecard</h2>
-        <ScoreCardGrid scorecard={data.mtdScorecard} />
-      </section>
-
       {/* Month Filter */}
       <section className="mb-6">
         <MonthFilter weeklyData={data.weeklyData} value={monthKey} onChange={setMonthKey} />
+      </section>
+
+      {/* Scorecard */}
+      <section className="mb-8">
+        <h2 className="text-xl font-bold text-white mb-4">Scorecard</h2>
+        <ScoreCardGrid scorecard={activeScorecard} />
       </section>
 
       {/* Weekly Performance */}
@@ -46,7 +51,7 @@ function ClientDashboardContent({ data }: { data: ClientApiResponse }) {
 
       {/* Creator Pipeline */}
       <section className="mb-8">
-        <CreatorPipeline scorecard={data.mtdScorecard} />
+        <CreatorPipeline scorecard={activeScorecard} />
       </section>
 
       {/* Monthly Performance */}

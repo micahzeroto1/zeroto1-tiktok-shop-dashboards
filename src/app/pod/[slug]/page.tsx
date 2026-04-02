@@ -26,28 +26,33 @@ function PodDashboardContent({ data }: { data: PodApiResponse }) {
   const [monthKey, setMonthKey] = useState(getCurrentMonthKey);
   const filteredWeekly = filterWeeklyByMonth(data.weeklyData, monthKey);
 
-  const totalMtdGmv = data.clients.reduce((s, c) => s + c.cumulativeMtdGmv, 0);
-  const totalTarget = data.clients.reduce((s, c) => s + c.gmvTargetMonth, 0);
+  const activeClients =
+    monthKey !== getCurrentMonthKey() && data.monthlyClients?.[monthKey]
+      ? data.monthlyClients[monthKey]
+      : data.clients;
+
+  const totalMtdGmv = activeClients.reduce((s, c) => s + c.cumulativeMtdGmv, 0);
+  const totalTarget = activeClients.reduce((s, c) => s + c.gmvTargetMonth, 0);
   const gmvPacing = totalTarget > 0 ? totalMtdGmv / totalTarget : 0;
-  const totalVideos = data.clients.reduce((s, c) => s + c.videosPosted, 0);
-  const totalVideoTarget = data.clients.reduce((s, c) => s + c.monthlyVideoTarget, 0);
+  const totalVideos = activeClients.reduce((s, c) => s + c.videosPosted, 0);
+  const totalVideoTarget = activeClients.reduce((s, c) => s + c.monthlyVideoTarget, 0);
   const videoPacing = totalVideoTarget > 0 ? totalVideos / totalVideoTarget : 0;
-  const totalSamples = data.clients.reduce((s, c) => s + c.totalSamplesApproved, 0);
-  const totalSamplesTarget = data.clients.reduce((s, c) => s + c.targetSamplesGoals, 0);
+  const totalSamples = activeClients.reduce((s, c) => s + c.totalSamplesApproved, 0);
+  const totalSamplesTarget = activeClients.reduce((s, c) => s + c.targetSamplesGoals, 0);
   const samplesPacing = totalSamplesTarget > 0 ? totalSamples / totalSamplesTarget : 0;
-  const totalSpend = data.clients.reduce((s, c) => s + c.adSpend, 0);
-  const totalSpendTarget = data.clients.reduce((s, c) => s + c.spendTarget, 0);
+  const totalSpend = activeClients.reduce((s, c) => s + c.adSpend, 0);
+  const totalSpendTarget = activeClients.reduce((s, c) => s + c.spendTarget, 0);
   const spendPacing = totalSpendTarget > 0 ? totalSpend / totalSpendTarget : 0;
-  const roiClients = data.clients.filter((c) => c.roi > 0);
+  const roiClients = activeClients.filter((c) => c.roi > 0);
   const avgRoi = roiClients.length > 0
     ? roiClients.reduce((s, c) => s + c.roi, 0) / roiClients.length
     : 0;
 
-  const total = data.clients.length;
-  const gmvReporting = data.clients.filter((c) => c.gmvTargetMonth > 0).length;
-  const videoReporting = data.clients.filter((c) => c.monthlyVideoTarget > 0).length;
-  const samplesReporting = data.clients.filter((c) => c.targetSamplesGoals > 0).length;
-  const spendReporting = data.clients.filter((c) => c.spendTarget > 0).length;
+  const total = activeClients.length;
+  const gmvReporting = activeClients.filter((c) => c.gmvTargetMonth > 0).length;
+  const videoReporting = activeClients.filter((c) => c.monthlyVideoTarget > 0).length;
+  const samplesReporting = activeClients.filter((c) => c.targetSamplesGoals > 0).length;
+  const spendReporting = activeClients.filter((c) => c.spendTarget > 0).length;
 
   function dataWarning(reporting: number): string | undefined {
     return reporting < total ? `${reporting} of ${total} clients reporting` : undefined;
@@ -63,6 +68,11 @@ function PodDashboardContent({ data }: { data: PodApiResponse }) {
       subtitle="Pod Performance Overview"
       lastUpdated={data.lastUpdated}
     >
+      {/* Month Filter */}
+      <section className="mb-6">
+        <MonthFilter weeklyData={data.weeklyData} value={monthKey} onChange={setMonthKey} />
+      </section>
+
       {/* Pod Summary KPIs */}
       <section className="mb-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -71,18 +81,13 @@ function PodDashboardContent({ data }: { data: PodApiResponse }) {
           <KpiCard label="Pod Samples Approved" value={totalSamples} target={totalSamplesTarget} pacing={samplesPacing} status={getPacingStatus(samplesPacing)} format="number" warning={dataWarning(samplesReporting)} />
           <KpiCard label="Pod Ad Spend" value={totalSpend} target={totalSpendTarget} pacing={spendPacing} status={getPacingStatus(spendPacing)} format="currency" warning={dataWarning(spendReporting)} />
           <KpiCard label="Avg ROI" value={avgRoi} status="green" format="roi" />
-          <KpiCard label="Active Clients" value={data.clients.length} status="green" format="number" />
+          <KpiCard label="Active Clients" value={activeClients.length} status="green" format="number" />
         </div>
       </section>
 
       {/* Daily Table/Heatmap */}
       <section className="mb-8">
-        <DailyHeatmap clients={data.clients} />
-      </section>
-
-      {/* Month Filter */}
-      <section className="mb-6">
-        <MonthFilter weeklyData={data.weeklyData} value={monthKey} onChange={setMonthKey} />
+        <DailyHeatmap clients={activeClients} />
       </section>
 
       {/* Weekly Performance Charts */}
@@ -103,16 +108,16 @@ function PodDashboardContent({ data }: { data: PodApiResponse }) {
       )}
 
       {/* MTD Pacing Leaderboard */}
-      {data.clients.length > 0 && (
+      {activeClients.length > 0 && (
         <section className="mb-8">
-          <PacingLeaderboard clients={data.clients} />
+          <PacingLeaderboard clients={activeClients} />
         </section>
       )}
 
       {/* Pipeline Health */}
-      {data.clients.length > 0 && (
+      {activeClients.length > 0 && (
         <section className="mb-8">
-          <PipelineHealthChart clients={data.clients} />
+          <PipelineHealthChart clients={activeClients} />
         </section>
       )}
 
@@ -120,7 +125,7 @@ function PodDashboardContent({ data }: { data: PodApiResponse }) {
       <section className="mb-8">
         <h2 className="text-xl font-bold text-white mb-4">Client Scorecards</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {data.clients.map((client) => (
+          {activeClients.map((client) => (
             <div
               key={client.clientSlug}
               className="bg-zt-card rounded-xl border border-zt-border p-4"
