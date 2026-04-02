@@ -139,3 +139,65 @@ export function filterWeeklyByPeriod(
     }
   });
 }
+
+/**
+ * Month key format: "2026-04" or "ytd".
+ * Filter weekly data to a specific month, or return all for YTD.
+ */
+export function filterWeeklyByMonth(
+  weeks: WeeklyRollup[],
+  monthKey: string,
+): WeeklyRollup[] {
+  if (monthKey === 'ytd') {
+    const currentYear = new Date().getFullYear();
+    return weeks.filter((w) => {
+      const d = parseDate(w.date);
+      return d ? d.getFullYear() === currentYear : false;
+    });
+  }
+
+  const [yearStr, monthStr] = monthKey.split('-');
+  const year = Number(yearStr);
+  const month = Number(monthStr) - 1; // 0-based
+
+  return weeks.filter((w) => {
+    const d = parseDate(w.date);
+    if (!d) return false;
+    return d.getFullYear() === year && d.getMonth() === month;
+  });
+}
+
+/**
+ * Extract unique month/year pairs from weekly data, sorted most recent first.
+ * Returns array of { key: "2026-04", label: "Apr 2026" }.
+ */
+export function getAvailableMonths(
+  weeks: WeeklyRollup[]
+): { key: string; label: string }[] {
+  const seen = new Set<string>();
+  const months: { key: string; year: number; month: number }[] = [];
+
+  for (const w of weeks) {
+    const d = parseDate(w.date);
+    if (!d) continue;
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      months.push({ key, year: d.getFullYear(), month: d.getMonth() });
+    }
+  }
+
+  // Sort most recent first
+  months.sort((a, b) => b.year - a.year || b.month - a.month);
+
+  return months.map((m) => ({
+    key: m.key,
+    label: `${SHORT_MONTHS[m.month]} ${m.year}`,
+  }));
+}
+
+/** Get the current month key in "YYYY-MM" format */
+export function getCurrentMonthKey(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}

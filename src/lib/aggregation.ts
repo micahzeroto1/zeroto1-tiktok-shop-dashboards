@@ -1,6 +1,70 @@
 import { getPacingStatus } from '@/config/constants';
-import type { ClientMtdSummary, PodSummary, CeoApiResponse } from '@/types/dashboard';
+import type { ClientMtdSummary, MonthlyAggregate, PodSummary, CeoApiResponse, WeeklyRollup } from '@/types/dashboard';
 import { config } from '@/config/pods';
+
+const MONTH_NAMES = [
+  'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
+  'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER',
+];
+
+/**
+ * Aggregate monthly rollup rows from multiple clients into MonthlyAggregate[].
+ * Groups by month name (weekLabel), sums metrics, averages ROI.
+ */
+export function aggregateMonthlyAcrossClients(
+  allMonthlyRows: WeeklyRollup[]
+): MonthlyAggregate[] {
+  const byMonth = new Map<string, WeeklyRollup[]>();
+  for (const row of allMonthlyRows) {
+    const key = row.weekLabel.toUpperCase();
+    const existing = byMonth.get(key) || [];
+    existing.push(row);
+    byMonth.set(key, existing);
+  }
+
+  const result: MonthlyAggregate[] = [];
+  byMonth.forEach((rows, monthKey) => {
+    const totalGmv = rows.reduce((s, r) => s + r.cumulativeMtdGmv, 0);
+    const gmvTarget = rows.reduce((s, r) => s + r.gmvTarget, 0);
+    const totalVideosPosted = rows.reduce((s, r) => s + r.videosPosted, 0);
+    const videoTarget = rows.reduce((s, r) => s + r.monthlyVideoTarget, 0);
+    const totalSamplesApproved = rows.reduce((s, r) => s + r.totalSamplesApproved, 0);
+    const samplesTarget = rows.reduce((s, r) => s + r.targetSamplesGoals, 0);
+    const totalAdSpend = rows.reduce((s, r) => s + r.adSpend, 0);
+    const spendTarget = rows.reduce((s, r) => s + r.spendTarget, 0);
+    const roiRows = rows.filter((r) => r.roi > 0);
+    const avgRoi = roiRows.length > 0
+      ? roiRows.reduce((s, r) => s + r.roi, 0) / roiRows.length
+      : 0;
+    const roiTarget = Math.max(...rows.map((r) => r.roiTarget), 0);
+
+    // Title-case the month name
+    const month = monthKey.charAt(0) + monthKey.slice(1).toLowerCase();
+
+    result.push({
+      month,
+      totalGmv,
+      gmvTarget,
+      totalVideosPosted,
+      videoTarget,
+      totalSamplesApproved,
+      samplesTarget,
+      totalAdSpend,
+      spendTarget,
+      avgRoi,
+      roiTarget,
+    });
+  });
+
+  // Sort chronologically
+  result.sort((a, b) => {
+    const ai = MONTH_NAMES.indexOf(a.month.toUpperCase());
+    const bi = MONTH_NAMES.indexOf(b.month.toUpperCase());
+    return ai - bi;
+  });
+
+  return result;
+}
 
 export function aggregatePod(
   podSlug: string,
@@ -51,7 +115,7 @@ export function aggregatePod(
   };
 }
 
-export function aggregateCompany(pods: PodSummary[], ytdGmv: number): Omit<CeoApiResponse, 'lastUpdated'> {
+export function aggregateCompany(pods: PodSummary[], ytdGmv: number): Omit<CeoApiResponse, 'lastUpdated' | 'weeklyData' | 'monthlyData'> {
   const companyMtdGmv = pods.reduce((s, p) => s + p.totalMtdGmv, 0);
   const companyMtdTarget = pods.reduce((s, p) => s + p.totalMtdTarget, 0);
   const companyGmvPacing = companyMtdTarget > 0

@@ -4,6 +4,7 @@ import { fetchClientRangesSafe } from '@/lib/google-sheets';
 import { parseRawTab, parseRollupTab } from '@/lib/data-parser';
 import { buildMtdScorecardFromRollup, buildMtdScorecard } from '@/lib/pacing';
 import { sortWeeklyByDate } from '@/lib/week-labels';
+import { aggregateMonthlyAcrossClients } from '@/lib/aggregation';
 import { CACHE_REVALIDATE_SECONDS } from '@/config/constants';
 import type { ClientMtdSummary, PodApiResponse, WeeklyRollup } from '@/types/dashboard';
 
@@ -28,6 +29,7 @@ export async function GET(
       podSlug: pod.slug,
       clients: [],
       weeklyData: [],
+      monthlyData: [],
       lastUpdated: new Date().toISOString(),
     } satisfies PodApiResponse);
   }
@@ -42,6 +44,7 @@ export async function GET(
     );
 
     const allWeeklyRows: WeeklyRollup[][] = [];
+    const allMonthlyRows: WeeklyRollup[] = [];
 
     const clients: ClientMtdSummary[] = clientResults
       .filter((r) => r.data !== null)
@@ -51,6 +54,9 @@ export async function GET(
 
       const daily = parseRawTab(rawRows);
       const { weeklyRows, monthlyRows } = parseRollupTab(rollupRows);
+
+      // Collect monthly rows for pod-level aggregation
+      allMonthlyRows.push(...monthlyRows);
 
       // Collect weekly rows for pod-level aggregation
       const activeWeekly = weeklyRows.filter(
@@ -127,11 +133,14 @@ export async function GET(
     }
     const weeklyData = sortWeeklyByDate(Array.from(weekMap.values()));
 
+    const monthlyData = aggregateMonthlyAcrossClients(allMonthlyRows);
+
     const response: PodApiResponse = {
       podName: pod.displayName,
       podSlug: pod.slug,
       clients,
       weeklyData,
+      monthlyData,
       lastUpdated: new Date().toISOString(),
     };
 

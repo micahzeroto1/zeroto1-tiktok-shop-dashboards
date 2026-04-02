@@ -173,6 +173,7 @@ export interface PodApiResponse {
   podSlug: string;
   clients: ClientMtdSummary[];
   weeklyData: WeeklyRollup[];
+  monthlyData: MonthlyAggregate[];
   lastUpdated: string;
 }
 
@@ -209,5 +210,7 @@ export interface CeoApiResponse {
   ytdTarget: number;
   pods: PodSummary[];
   allClients: ClientMtdSummary[];
+  weeklyData: WeeklyRollup[];
+  monthlyData: MonthlyAggregate[];
   lastUpdated: string;
 }

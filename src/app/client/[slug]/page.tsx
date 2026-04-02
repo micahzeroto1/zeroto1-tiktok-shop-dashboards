@@ -5,19 +5,20 @@ import { useParams } from 'next/navigation';
 import TokenGate from '@/components/layout/TokenGate';
 import DashboardShell from '@/components/layout/DashboardShell';
 import ScoreCardGrid from '@/components/cards/ScoreCardGrid';
-import TimeFilter from '@/components/filters/TimeFilter';
+import MonthFilter from '@/components/filters/MonthFilter';
 import WeeklyBarChart from '@/components/charts/WeeklyBarChart';
 import WeeklyMetricsCharts from '@/components/charts/WeeklyMetricsCharts';
 import WeeklyTable from '@/components/tables/WeeklyTable';
+import MonthlyBarChart from '@/components/charts/MonthlyBarChart';
 import MonthlyTrendChart from '@/components/charts/MonthlyTrendChart';
 import SkuBreakdownChart from '@/components/charts/SkuBreakdownChart';
 import CreatorPipeline from '@/components/charts/CreatorPipeline';
-import { filterWeeklyByPeriod, type TimePeriod } from '@/lib/week-labels';
+import { filterWeeklyByMonth, getCurrentMonthKey } from '@/lib/week-labels';
 import type { ClientApiResponse } from '@/types/dashboard';
 
 function ClientDashboardContent({ data }: { data: ClientApiResponse }) {
-  const [period, setPeriod] = useState<TimePeriod>('current_month');
-  const filteredWeekly = filterWeeklyByPeriod(data.weeklyData, period);
+  const [monthKey, setMonthKey] = useState(getCurrentMonthKey);
+  const filteredWeekly = filterWeeklyByMonth(data.weeklyData, monthKey);
 
   return (
     <DashboardShell
@@ -31,9 +32,9 @@ function ClientDashboardContent({ data }: { data: ClientApiResponse }) {
         <ScoreCardGrid scorecard={data.mtdScorecard} />
       </section>
 
-      {/* Time Filter */}
+      {/* Month Filter */}
       <section className="mb-6">
-        <TimeFilter value={period} onChange={setPeriod} />
+        <MonthFilter weeklyData={data.weeklyData} value={monthKey} onChange={setMonthKey} />
       </section>
 
       {/* Weekly Performance */}
@@ -48,8 +49,9 @@ function ClientDashboardContent({ data }: { data: ClientApiResponse }) {
         <CreatorPipeline scorecard={data.mtdScorecard} />
       </section>
 
-      {/* Monthly Trends */}
-      <section className="mb-8">
+      {/* Monthly Performance */}
+      <section className="mb-8 space-y-6">
+        <MonthlyBarChart monthlyData={data.monthlyData} />
         <MonthlyTrendChart monthlyData={data.monthlyData} />
       </section>
 

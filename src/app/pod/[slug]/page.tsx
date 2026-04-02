@@ -5,15 +5,17 @@ import { useParams } from 'next/navigation';
 import TokenGate from '@/components/layout/TokenGate';
 import DashboardShell from '@/components/layout/DashboardShell';
 import KpiCard from '@/components/cards/KpiCard';
-import TimeFilter from '@/components/filters/TimeFilter';
+import MonthFilter from '@/components/filters/MonthFilter';
 import WeeklyBarChart from '@/components/charts/WeeklyBarChart';
 import WeeklyMetricsCharts from '@/components/charts/WeeklyMetricsCharts';
 import WeeklyTable from '@/components/tables/WeeklyTable';
+import MonthlyBarChart from '@/components/charts/MonthlyBarChart';
+import MonthlyTrendChart from '@/components/charts/MonthlyTrendChart';
 import DailyHeatmap from '@/components/tables/DailyHeatmap';
 import PacingLeaderboard from '@/components/tables/PacingLeaderboard';
 import PipelineHealthChart from '@/components/charts/PipelineHealthChart';
 import { getPacingStatus } from '@/config/constants';
-import { filterWeeklyByPeriod, type TimePeriod } from '@/lib/week-labels';
+import { filterWeeklyByMonth, getCurrentMonthKey } from '@/lib/week-labels';
 import type { PodApiResponse } from '@/types/dashboard';
 
 function fmtCurrency(val: number): string {
@@ -21,8 +23,8 @@ function fmtCurrency(val: number): string {
 }
 
 function PodDashboardContent({ data }: { data: PodApiResponse }) {
-  const [period, setPeriod] = useState<TimePeriod>('current_month');
-  const filteredWeekly = filterWeeklyByPeriod(data.weeklyData, period);
+  const [monthKey, setMonthKey] = useState(getCurrentMonthKey);
+  const filteredWeekly = filterWeeklyByMonth(data.weeklyData, monthKey);
 
   const totalMtdGmv = data.clients.reduce((s, c) => s + c.cumulativeMtdGmv, 0);
   const totalTarget = data.clients.reduce((s, c) => s + c.gmvTargetMonth, 0);
@@ -78,9 +80,9 @@ function PodDashboardContent({ data }: { data: PodApiResponse }) {
         <DailyHeatmap clients={data.clients} />
       </section>
 
-      {/* Time Filter */}
+      {/* Month Filter */}
       <section className="mb-6">
-        <TimeFilter value={period} onChange={setPeriod} />
+        <MonthFilter weeklyData={data.weeklyData} value={monthKey} onChange={setMonthKey} />
       </section>
 
       {/* Weekly Performance Charts */}
@@ -89,6 +91,14 @@ function PodDashboardContent({ data }: { data: PodApiResponse }) {
           <WeeklyBarChart weeklyData={filteredWeekly} />
           <WeeklyMetricsCharts weeklyData={filteredWeekly} />
           <WeeklyTable weeklyData={filteredWeekly} />
+        </section>
+      )}
+
+      {/* Monthly Performance */}
+      {data.monthlyData && data.monthlyData.length > 0 && (
+        <section className="mb-8 space-y-6">
+          <MonthlyBarChart monthlyData={data.monthlyData} />
+          <MonthlyTrendChart monthlyData={data.monthlyData} />
         </section>
       )}
 
